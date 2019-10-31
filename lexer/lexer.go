@@ -1,7 +1,11 @@
 // lexer/lexer.go
 package lexer
 
-import "github.com/profsergiocosta/jackcompiler-go/token"
+import (
+	"strings"
+
+	"github.com/profsergiocosta/jackcompiler-go/token"
+)
 
 type Lexer struct {
 	input        string
@@ -15,6 +19,39 @@ func New(input string) *Lexer {
 	l.readChar()
 	return l
 }
+
+// nand2tetris api
+
+/*
+
+void advance();
+  bool hasMoreTokens();
+
+  TokenType tokenType();
+
+  Keyword keyword();
+
+  char symbol();
+
+  string identifier();
+
+  int intVal();
+
+  string stringVal();
+
+  bool isSymbol(char t);
+  bool isSymbol(string t);
+  bool isKeyword(string t);
+
+  bool isStringConst(string t);
+
+  bool isIntConst(string t);
+
+  bool isIdentifier(string t);
+
+*/
+
+// privates
 
 func (l *Lexer) readChar() {
 	if l.readPosition >= len(l.input) {
@@ -32,27 +69,13 @@ func (l *Lexer) NextToken() token.Token {
 	l.skipWhitespace()
 
 	switch l.ch {
-	case '=':
-		tok = newToken(token.ASSIGN, l.ch)
-	case ';':
-		tok = newToken(token.SEMICOLON, l.ch)
-	case '(':
-		tok = newToken(token.LPAREN, l.ch)
-	case ')':
-		tok = newToken(token.RPAREN, l.ch)
-	case ',':
-		tok = newToken(token.COMMA, l.ch)
-	case '+':
-		tok = newToken(token.PLUS, l.ch)
-	case '{':
-		tok = newToken(token.LBRACE, l.ch)
-	case '}':
-		tok = newToken(token.RBRACE, l.ch)
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
 	default:
-		if isLetter(l.ch) {
+		if isSymbol(l.ch) {
+			tok = newToken(token.SYMBOL, l.ch)
+		} else if isLetter(l.ch) {
 			tok.Literal = l.readIdentifier()
 			tok.Type = token.LookupIdent(tok.Literal)
 			return tok
@@ -96,6 +119,12 @@ func (l *Lexer) readNumber() string {
 	}
 	return l.input[position:l.position]
 }
+
 func isDigit(ch byte) bool {
 	return '0' <= ch && ch <= '9'
+}
+
+func isSymbol(c byte) bool {
+	symbols := "{}()[].,;+-*/&|<>=~"
+	return strings.IndexByte(symbols, c) != -1
 }

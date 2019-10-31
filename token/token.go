@@ -9,36 +9,13 @@ type Token struct {
 const (
 	ILLEGAL = "ILLEGAL"
 	EOF     = "EOF"
-	// Identifiers + literals
-	IDENT    = "IDENT" // add, foobar, x, y, ...
+
+	// TOKEN TYPE
+	IDENT    = "IDENT" // identifiers: add, foobar, x, y, ...
 	INTCONST = "INTCOST"
 	STRING   = "STRING"
 	SYMBOL   = "SYMBOL"
-
-	//  Symbols
-	// Operators
-	ASSIGN   = "="
-	PLUS     = "+"
-	MINUS    = "-"
-	ASTERISK = "*"
-	SLASH    = "/"
-	AND      = "&"
-	OR       = "|"
-	NOT      = "~"
-	DOT      = "."
-	LT       = "<"
-	GT       = ">"
-	EQ       = "="
-
-	// Delimiters
-	COMMA     = ","
-	SEMICOLON = ";"
-	LPAREN    = "("
-	RPAREN    = ")"
-	LBRACE    = "{"
-	RBRACE    = "}"
-	LBRACKET  = "["
-	RBRACKET  = "]"
+	KEYWORD  = "KEYWORD"
 
 	// Keywords
 	METHOD      = "METHOD"

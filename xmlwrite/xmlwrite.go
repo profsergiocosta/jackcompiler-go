@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/profsergiocosta/jackcompiler-go/token"
 
@@ -11,18 +10,8 @@ import (
 
 // https://golang.org/doc/code.html
 
-func isSymbol(c string) bool {
-	symbols := "{}()[].,;+-*/&|<>=~"
-	return strings.Index(symbols, c) != -1
-}
-
 func tagToken(tok token.Token) string {
-	ttype := tok.Type
-	if isSymbol(string(ttype)) {
-		ttype = token.SYMBOL
-	}
-
-	return fmt.Sprintf("<%s>%s<%s>", ttype, tok.Literal, ttype)
+	return fmt.Sprintf("<%s>%s<%s>", tok.Type, tok.Literal, tok.Type)
 }
 func main() {
 	input := `let five = 5;
