@@ -15,7 +15,7 @@ func tagToken(tok token.Token) string {
 }
 func main() {
 	input := `let five = 5;
-	let ten = 10;
+	let ten = "10";
 	let add = x + y;
 	let result = add(five, ten);`
 

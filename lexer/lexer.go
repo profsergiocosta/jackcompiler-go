@@ -2,6 +2,7 @@
 package lexer
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/profsergiocosta/jackcompiler-go/token"
@@ -12,6 +13,7 @@ type Lexer struct {
 	position     int
 	readPosition int
 	ch           byte // current char under examination
+	currToken    token.Token
 }
 
 func New(input string) *Lexer {
@@ -20,38 +22,45 @@ func New(input string) *Lexer {
 	return l
 }
 
-// nand2tetris api
+/*******************************
+ nand2tetris api
+/*******************************/
+func (l *Lexer) advance() {
+	l.currToken = l.NextToken()
+}
+func (l *Lexer) hasMoreTokens() bool {
+	return l.currToken.Type != token.EOF
+}
 
-/*
+func (l *Lexer) tokenType() token.TokenType {
+	return l.currToken.Type
+}
 
-void advance();
-  bool hasMoreTokens();
+func (l *Lexer) keyword() token.TokenType {
+	return l.currToken.Type
+}
 
-  TokenType tokenType();
+func (l *Lexer) symbol() byte {
+	return l.currToken.Literal[0]
+}
 
-  Keyword keyword();
+func (l *Lexer) identifier() string {
+	return l.currToken.Literal
+}
 
-  char symbol();
+func (l *Lexer) intVal() int {
+	i1, err := strconv.Atoi(l.currToken.Literal)
+	if err == nil {
+		return i1
+	}
+	return -1
+}
 
-  string identifier();
+func (l *Lexer) stringVal() string {
+	return l.currToken.Literal
+}
 
-  int intVal();
-
-  string stringVal();
-
-  bool isSymbol(char t);
-  bool isSymbol(string t);
-  bool isKeyword(string t);
-
-  bool isStringConst(string t);
-
-  bool isIntConst(string t);
-
-  bool isIdentifier(string t);
-
-*/
-
-// privates
+/***********************************************/
 
 func (l *Lexer) readChar() {
 	if l.readPosition >= len(l.input) {
@@ -69,6 +78,11 @@ func (l *Lexer) NextToken() token.Token {
 	l.skipWhitespace()
 
 	switch l.ch {
+
+	case '"':
+		tok.Type = token.STRING
+		tok.Literal = l.readString()
+
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
@@ -127,4 +141,15 @@ func isDigit(ch byte) bool {
 func isSymbol(c byte) bool {
 	symbols := "{}()[].,;+-*/&|<>=~"
 	return strings.IndexByte(symbols, c) != -1
+}
+
+func (l *Lexer) readString() string {
+	position := l.position + 1
+	for {
+		l.readChar()
+		if l.ch == '"' || l.ch == 0 {
+			break
+		}
+	}
+	return l.input[position:l.position]
 }
