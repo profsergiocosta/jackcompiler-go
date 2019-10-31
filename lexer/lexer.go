@@ -4,6 +4,7 @@ package lexer
 import (
 	"strconv"
 	"strings"
+	"fmt"
 
 	"github.com/profsergiocosta/jackcompiler-go/token"
 )
@@ -62,15 +63,29 @@ func (l *Lexer) stringVal() string {
 
 /***********************************************/
 
-func (l *Lexer) readChar() {
-	if l.readPosition >= len(l.input) {
-		l.ch = 0
-	} else {
-		l.ch = l.input[l.readPosition]
-	}
-	l.position = l.readPosition
-	l.readPosition += 1
-}
+/*
+
+s = s + currentChar;
+        nextChar();
+        if (currentChar == '/') {
+          ignoreComments("//");
+        } else if (currentChar == '*') {
+          ignoreComments("/*");
+        } else {
+          return s;
+		}
+			case '=':
+		if l.peekChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			literal := string(ch) + string(l.ch)
+			tok = token.Token{Type: token.EQ, Literal: literal}
+		} else {
+			tok = newToken(token.ASSIGN, l.ch)
+		}
+		
+		*/
+
 
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
@@ -82,6 +97,16 @@ func (l *Lexer) NextToken() token.Token {
 	case '"':
 		tok.Type = token.STRING
 		tok.Literal = l.readString()
+
+	case '/': 
+		if l.peekChar() == '/' {
+			l.skipLineComments()
+			fmt.Println(l.ch)
+		} else if l.peekChar() == '*' {
+			//l.skipBlockComments()
+		}  else {
+			tok = newToken(token.SYMBOL, l.ch)
+		}
 
 	case 0:
 		tok.Literal = ""
@@ -104,34 +129,14 @@ func (l *Lexer) NextToken() token.Token {
 	l.readChar()
 	return tok
 }
+
 func newToken(tokenType token.TokenType, ch byte) token.Token {
 	return token.Token{Type: tokenType, Literal: string(ch)}
 }
 
-func (l *Lexer) readIdentifier() string {
-	position := l.position
-	for isLetter(l.ch) {
-		l.readChar()
-	}
-	return l.input[position:l.position]
-}
-
-func (l *Lexer) skipWhitespace() {
-	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
-		l.readChar()
-	}
-}
 
 func isLetter(ch byte) bool {
 	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
-}
-
-func (l *Lexer) readNumber() string {
-	position := l.position
-	for isDigit(l.ch) {
-		l.readChar()
-	}
-	return l.input[position:l.position]
 }
 
 func isDigit(ch byte) bool {
@@ -142,6 +147,75 @@ func isSymbol(c byte) bool {
 	symbols := "{}()[].,;+-*/&|<>=~"
 	return strings.IndexByte(symbols, c) != -1
 }
+
+
+func (l *Lexer) skipWhitespace() {
+	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+		l.readChar()
+	}
+}
+
+func (l *Lexer) skipLineComments() {
+	for l.ch != '\n' {
+		l.readChar()
+	}
+	l.readChar()
+}
+
+/*
+while (!endComment) {
+      look = nextChar();
+      if (look == '*') {
+        while (look == '*') look = nextChar();
+        if (look == '/') {
+          endComment = 1;
+          look = nextChar();
+        }
+	  }
+	  */
+
+func (l *Lexer) skipBlockComments() {
+
+}
+
+func (l *Lexer) peekChar() byte {
+	if l.readPosition >= len(l.input) {
+		return 0
+	} else {
+		return l.input[l.readPosition]
+	}
+}
+
+
+
+func (l *Lexer) readChar() {
+	if l.readPosition >= len(l.input) {
+		l.ch = 0
+	} else {
+		l.ch = l.input[l.readPosition]
+	}
+	l.position = l.readPosition
+	l.readPosition += 1
+}
+
+
+func (l *Lexer) readIdentifier() string {
+	position := l.position
+	for isLetter(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
+
+
+func (l *Lexer) readNumber() string {
+	position := l.position
+	for isDigit(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
+
 
 func (l *Lexer) readString() string {
 	position := l.position + 1

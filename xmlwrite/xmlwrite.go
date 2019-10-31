@@ -16,13 +16,13 @@ func tagToken(tok token.Token) string {
 func main() {
 	input := `let five = 5;
 	let ten = "10";
-	let add = x + y;
+	let add = x / y;  
 	let result = add(five, ten);`
 
 	l := lexer.New(input)
 	fmt.Println("<tokens>")
 	for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
-		//fmt.Printf("%+v\n", tok)
+		fmt.Printf("%+v\n", tok)
 		fmt.Println(tagToken(tok))
 	}
 	fmt.Println("</tokens>")
