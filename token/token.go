@@ -11,9 +11,9 @@ const (
 	EOF     = "EOF"
 
 	// TOKEN TYPE
-	IDENT    = "IDENT" // identifiers: add, foobar, x, y, ...
-	INTCONST = "INTCOST"
-	STRING   = "STRING"
+	IDENT    = "IDENTIFIER" // identifiers: add, foobar, x, y, ...
+	INTCONST = "INTCONST"
+	STRING   = "STRINGCONST"
 	SYMBOL   = "SYMBOL"
 	KEYWORD  = "KEYWORD"
 
@@ -66,8 +66,8 @@ var keywords = map[string]TokenType{
 }
 
 func LookupIdent(ident string) TokenType {
-	if tok, ok := keywords[ident]; ok {
-		return tok
+	if _, ok := keywords[ident]; ok {
+		return KEYWORD //tok
 	}
 	return IDENT
 }

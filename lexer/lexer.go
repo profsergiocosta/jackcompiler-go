@@ -4,7 +4,6 @@ package lexer
 import (
 	"strconv"
 	"strings"
-	"fmt"
 
 	"github.com/profsergiocosta/jackcompiler-go/token"
 )
@@ -63,30 +62,6 @@ func (l *Lexer) stringVal() string {
 
 /***********************************************/
 
-/*
-
-s = s + currentChar;
-        nextChar();
-        if (currentChar == '/') {
-          ignoreComments("//");
-        } else if (currentChar == '*') {
-          ignoreComments("/*");
-        } else {
-          return s;
-		}
-			case '=':
-		if l.peekChar() == '=' {
-			ch := l.ch
-			l.readChar()
-			literal := string(ch) + string(l.ch)
-			tok = token.Token{Type: token.EQ, Literal: literal}
-		} else {
-			tok = newToken(token.ASSIGN, l.ch)
-		}
-		
-		*/
-
-
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 
@@ -98,13 +73,14 @@ func (l *Lexer) NextToken() token.Token {
 		tok.Type = token.STRING
 		tok.Literal = l.readString()
 
-	case '/': 
+	case '/':
 		if l.peekChar() == '/' {
 			l.skipLineComments()
-			fmt.Println(l.ch)
+			return l.NextToken()
 		} else if l.peekChar() == '*' {
-			//l.skipBlockComments()
-		}  else {
+			l.skipBlockComments()
+			return l.NextToken()
+		} else {
 			tok = newToken(token.SYMBOL, l.ch)
 		}
 
@@ -134,7 +110,6 @@ func newToken(tokenType token.TokenType, ch byte) token.Token {
 	return token.Token{Type: tokenType, Literal: string(ch)}
 }
 
-
 func isLetter(ch byte) bool {
 	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
 }
@@ -148,9 +123,8 @@ func isSymbol(c byte) bool {
 	return strings.IndexByte(symbols, c) != -1
 }
 
-
 func (l *Lexer) skipWhitespace() {
-	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' || l.ch == 10 {
 		l.readChar()
 	}
 }
@@ -159,23 +133,22 @@ func (l *Lexer) skipLineComments() {
 	for l.ch != '\n' {
 		l.readChar()
 	}
-	l.readChar()
 }
 
-/*
-while (!endComment) {
-      look = nextChar();
-      if (look == '*') {
-        while (look == '*') look = nextChar();
-        if (look == '/') {
-          endComment = 1;
-          look = nextChar();
-        }
-	  }
-	  */
-
 func (l *Lexer) skipBlockComments() {
-
+	endComment := false
+	for !endComment {
+		l.readChar()
+		if l.ch == '*' {
+			for l.ch == '*' {
+				l.readChar()
+			}
+			if l.ch == '/' {
+				endComment = true
+				l.readChar()
+			}
+		}
+	}
 }
 
 func (l *Lexer) peekChar() byte {
@@ -185,8 +158,6 @@ func (l *Lexer) peekChar() byte {
 		return l.input[l.readPosition]
 	}
 }
-
-
 
 func (l *Lexer) readChar() {
 	if l.readPosition >= len(l.input) {
@@ -198,7 +169,6 @@ func (l *Lexer) readChar() {
 	l.readPosition += 1
 }
 
-
 func (l *Lexer) readIdentifier() string {
 	position := l.position
 	for isLetter(l.ch) {
@@ -207,7 +177,6 @@ func (l *Lexer) readIdentifier() string {
 	return l.input[position:l.position]
 }
 
-
 func (l *Lexer) readNumber() string {
 	position := l.position
 	for isDigit(l.ch) {
@@ -215,7 +184,6 @@ func (l *Lexer) readNumber() string {
 	}
 	return l.input[position:l.position]
 }
-
 
 func (l *Lexer) readString() string {
 	position := l.position + 1
