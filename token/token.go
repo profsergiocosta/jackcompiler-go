@@ -9,11 +9,11 @@ type Token struct {
 const (
 	ILLEGAL = "ILLEGAL"
 	EOF     = "EOF"
-
 	// Identifiers + literals
-	IDENT    = "IDENT"    // add, foobar, x, y, ...
-	INTCONST = "INTCONST" // 1343456
-	STRING   = "STRING"   // "foobar"
+	IDENT    = "IDENT" // add, foobar, x, y, ...
+	INTCONST = "INTCOST"
+	STRING   = "STRING"
+	SYMBOL   = "SYMBOL"
 
 	//  Symbols
 	// Operators
@@ -26,11 +26,9 @@ const (
 	OR       = "|"
 	NOT      = "~"
 	DOT      = "."
-
-	LT = "<"
-	GT = ">"
-
-	EQ = "="
+	LT       = "<"
+	GT       = ">"
+	EQ       = "="
 
 	// Delimiters
 	COMMA     = ","
