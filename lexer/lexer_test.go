@@ -16,63 +16,34 @@ func TestNextToken(t *testing.T) {
 		expectedType    token.TokenType
 		expectedLiteral string
 	}{
-		{token.LET, "let"},
+		{token.KEYWORD, "let"},
 		{token.IDENT, "five"},
-		{token.ASSIGN, "="},
+		{token.SYMBOL, "="},
 		{token.INTCONST, "5"},
-		{token.SEMICOLON, ";"},
-		{token.LET, "let"},
+		{token.SYMBOL, ";"},
+		{token.KEYWORD, "let"},
 		{token.IDENT, "ten"},
-		{token.ASSIGN, "="},
+		{token.SYMBOL, "="},
 		{token.INTCONST, "10"},
-		{token.SEMICOLON, ";"},
-		{token.LET, "let"},
+		{token.SYMBOL, ";"},
+		{token.KEYWORD, "let"},
 		{token.IDENT, "add"},
-		{token.ASSIGN, "="},
+		{token.SYMBOL, "="},
 		{token.IDENT, "x"},
-		{token.PLUS, "+"},
+		{token.SYMBOL, "+"},
 		{token.IDENT, "y"},
-		{token.SEMICOLON, ";"},
-		{token.LET, "let"},
+		{token.SYMBOL, ";"},
+		{token.KEYWORD, "let"},
 		{token.IDENT, "result"},
-		{token.ASSIGN, "="},
+		{token.SYMBOL, "="},
 		{token.IDENT, "add"},
-		{token.LPAREN, "("},
+		{token.SYMBOL, "("},
 		{token.IDENT, "five"},
-		{token.COMMA, ","},
+		{token.SYMBOL, ","},
 		{token.IDENT, "ten"},
-		{token.RPAREN, ")"},
-		{token.SEMICOLON, ";"},
+		{token.SYMBOL, ")"},
+		{token.SYMBOL, ";"},
 		{token.EOF, ""},
-	}
-	l := New(input)
-
-	for i, tt := range tests {
-		tok := l.NextToken()
-		fmt.Println(tok)
-		if tok.Type != tt.expectedType {
-			t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q",
-				i, tt.expectedType, tok.Type)
-		}
-		if tok.Literal != tt.expectedLiteral {
-			t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q",
-				i, tt.expectedLiteral, tok.Literal)
-		}
-	}
-}
-
-func TestNextToken2(t *testing.T) {
-	input := `class Main {
-
-	}`
-	tests := []struct {
-		expectedType    token.TokenType
-		expectedLiteral string
-	}{
-		{token.CLASS, "class"},
-		{token.IDENT, "Main"},
-		{token.LBRACE, "{"},
-		{token.RBRACE, "}"},
 	}
 	l := New(input)
 

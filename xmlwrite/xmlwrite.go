@@ -1,4 +1,4 @@
-package main
+package xmlwrite
 
 import (
 	"fmt"
@@ -8,19 +8,6 @@ import (
 
 	"github.com/profsergiocosta/jackcompiler-go/lexer"
 )
-
-// https://golang.org/doc/code.html
-
-/*
-    if (symbol() == '<')
-        return "<symbol> &lt; </symbol>";
-      else if (symbol() == '>')
-        return "<symbol> &gt; </symbol>";
-      else if (symbol() == '\"')
-        return "<symbol> &quot; </symbol>";
-      else if (symbol() == '&')
-		return "<symbol> &amp; </symbol>";
-*/
 
 func tagToken(tok token.Token) string {
 	value := tok.Literal
@@ -40,7 +27,20 @@ func tagToken(tok token.Token) string {
 	}
 	return fmt.Sprintf("<%s>%s</%s>", tok.Type, value, tok.Type)
 }
-func main() {
+
+func PrintTerminal(tok token.Token) {
+	fmt.Println(tagToken(tok))
+}
+
+func TagNonTerminal(nonTerminal string) {
+	fmt.Println("<" + nonTerminal + ">")
+}
+
+func UntagNonTerminal(nonTerminal string) {
+	fmt.Println("</" + nonTerminal + ">")
+}
+
+func imprime() {
 	/*
 		input := `let five = 5;
 		let ten = "10";
