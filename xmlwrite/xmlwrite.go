@@ -28,16 +28,23 @@ func tagToken(tok token.Token) string {
 	return fmt.Sprintf("<%s>%s</%s>", tok.Type, value, tok.Type)
 }
 
-func PrintTerminal(tok token.Token) {
-	fmt.Println(tagToken(tok))
+func PrintTerminal(tok token.Token, toPrint bool) {
+	if toPrint {
+		fmt.Println(tagToken(tok))
+
+	}
 }
 
-func TagNonTerminal(nonTerminal string) {
-	fmt.Println("<" + nonTerminal + ">")
+func TagNonTerminal(nonTerminal string, toPrint bool) {
+	if toPrint {
+		fmt.Println("<" + nonTerminal + ">")
+	}
 }
 
-func UntagNonTerminal(nonTerminal string) {
-	fmt.Println("</" + nonTerminal + ">")
+func UntagNonTerminal(nonTerminal string, toPrint bool) {
+	if toPrint {
+		fmt.Println("</" + nonTerminal + ">")
+	}
 }
 
 func imprime() {

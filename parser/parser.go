@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/profsergiocosta/jackcompiler-go/lexer"
 	"github.com/profsergiocosta/jackcompiler-go/token"
@@ -36,36 +37,35 @@ func (p *Parser) nextToken() {
 
 func (p *Parser) Compile() {
 	p.CompileClass()
-	fmt.Println(p.errors)
+
 }
 
 func (p *Parser) CompileClass() {
 
-	if !p.curTokenIs("class") {
-		msg := fmt.Sprintf("expected token to be %s, got %s instead",
-			"class", p.curToken.Literal)
-		p.errors = append(p.errors, msg)
-		return
-	}
+	p.expectTokenByLiteral("class")
+	xmlwrite.TagNonTerminal("class", p.output == XML)
+	p.nextToken()
 
-	if p.output == XML {
-		xmlwrite.TagNonTerminal("class")
-	}
+	p.expectTokenByType(token.IDENT)
+	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+	p.nextToken()
 
-	if p.output == XML {
-		xmlwrite.UntagNonTerminal("class")
-	}
+	p.expectTokenByLiteral("{")
+	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+	p.nextToken()
+
+	xmlwrite.UntagNonTerminal("class", p.output == XML)
 
 }
 
 // book write an interpreter in go
-
+/*
 func (p *Parser) curTokenIs(t string) bool {
-	return p.curToken.Literal == t
+	return p.curToken.Literal == t || string(p.curToken.Type) == t // I am not sure about this
 }
 
-func (p *Parser) peekTokenIs(token string) bool {
-	return p.peekToken.Literal == token
+func (p *Parser) peekTokenIs(t string) bool {
+	return p.peekToken.Literal == t || string(p.peekToken.Type) == t // I am not sure about this
 }
 
 func (p *Parser) expectPeek(token string) bool {
@@ -82,8 +82,26 @@ func (p *Parser) Errors() []string {
 	return p.errors
 }
 
-func (p *Parser) peekError(t string) {
-	msg := fmt.Sprintf("expected next token to be %s, got %s instead",
-		t, p.peekToken.Type)
-	p.errors = append(p.errors, msg)
+*/
+
+func (p *Parser) expectTokenByType(token token.TokenType) {
+	if p.curToken.Type == token {
+		return
+	} else {
+		msg := fmt.Sprintf("expected next token to be %s, got %s instead",
+			token, p.curToken.Literal)
+		fmt.Println(msg)
+		os.Exit(1)
+	}
+}
+
+func (p *Parser) expectTokenByLiteral(token string) {
+	if p.curToken.Literal == token {
+		return
+	} else {
+		msg := fmt.Sprintf("expected next token to be %s, got %s instead",
+			token, p.curToken.Literal)
+		fmt.Println(msg)
+		os.Exit(1)
+	}
 }
