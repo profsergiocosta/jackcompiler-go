@@ -38,9 +38,10 @@ func tagToken(tok token.Token) string {
 }
 
 func PrintTerminal(tok token.Token, toPrint bool) {
-	if toPrint {
+	if tok.Type == token.EOF {
+		fmt.Println("</EOF>")
+	} else if toPrint {
 		fmt.Println(tagToken(tok))
-
 	}
 }
 

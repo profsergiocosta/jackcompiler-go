@@ -141,6 +141,11 @@ func IsSymbol(c byte) bool {
 	return strings.IndexByte(symbols, c) != -1
 }
 
+func IsOperator(c byte) bool {
+	operators := "+-*/&|<>=~"
+	return strings.IndexByte(operators, c) != -1
+}
+
 func IsKeyword(k string) bool {
 	if _, ok := keywords[k]; ok {
 		return true

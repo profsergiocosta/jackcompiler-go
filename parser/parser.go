@@ -59,8 +59,80 @@ func (p *Parser) CompileClass() {
 
 func (p *Parser) CompileExpression() {
 	xmlwrite.TagNonTerminal("EXPRESSION", p.output == XML)
-
+	p.CompileTerm()
+	for !p.peekTokenIs(token.EOF) && token.IsOperator(p.peekToken.Literal[0]) {
+		p.nextToken()
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+		p.CompileTerm()
+	}
 	xmlwrite.UntagNonTerminal("EXPRESSION", p.output == XML)
+}
+
+func (p *Parser) CompileTerm() {
+	xmlwrite.TagNonTerminal("TERM", p.output == XML)
+	switch p.peekToken.Type {
+	case token.INTCONST, token.KEYWORD, token.STRING:
+		p.nextToken()
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+	case token.IDENT:
+		p.nextToken()
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+		switch p.peekToken.Type {
+		case token.LBRACKET:
+			p.nextToken()
+			xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+			p.CompileExpression()
+			p.expectPeek(token.RBRACKET)
+			xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+		case token.LPAREN, token.DOT:
+			p.CompileSubroutineCall()
+
+		default:
+
+		}
+
+	case token.LPAREN:
+		p.expectPeek(token.LPAREN)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+		p.CompileExpression()
+
+		p.expectPeek(token.RPAREN)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+	case token.MINUS, token.NOT:
+		p.nextToken()
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+		p.CompileTerm()
+
+	default:
+
+	}
+	xmlwrite.TagNonTerminal("/TERM", p.output == XML)
+}
+
+func (p *Parser) CompileSubroutineCall() {
+	// ainda vou precisar saber o nome da funcao
+	p.nextToken()
+	if p.curTokenIs(token.LPAREN) {
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+		p.CompileExpression()
+		p.expectPeek(token.RPAREN)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+	} else {
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML) // DOT
+
+		p.expectPeek(token.IDENT)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML) // ident
+
+		p.expectPeek(token.LPAREN)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+		p.CompileExpression()
+		p.expectPeek(token.RPAREN)
+
+	}
+
 }
 
 func (p *Parser) curTokenIs(t token.TokenType) bool {
