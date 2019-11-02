@@ -11,6 +11,8 @@ import (
 
 func tagToken(tok token.Token) string {
 	value := tok.Literal
+	ttype := tok.Type
+
 	if tok.Type == token.SYMBOL {
 		switch tok.Literal {
 		case "<":
@@ -25,7 +27,14 @@ func tagToken(tok token.Token) string {
 			value = tok.Literal
 		}
 	}
-	return fmt.Sprintf("<%s>%s</%s>", tok.Type, value, tok.Type)
+
+	if token.IsSymbol(tok.Literal[0]) {
+		ttype = "SYMBOL"
+	} else if token.IsKeyword(tok.Literal) {
+		ttype = "KEYWORD"
+	}
+
+	return fmt.Sprintf("<%s>%s</%s>", ttype, value, ttype)
 }
 
 func PrintTerminal(tok token.Token, toPrint bool) {
@@ -47,7 +56,7 @@ func UntagNonTerminal(nonTerminal string, toPrint bool) {
 	}
 }
 
-func imprime() {
+func Imprime() {
 	/*
 		input := `let five = 5;
 		let ten = "10";
@@ -57,7 +66,7 @@ func imprime() {
 		let result = add(five, ten);`
 	*/
 
-	input, err := ioutil.ReadFile("Main.jack")
+	input, err := ioutil.ReadFile("xmlwrite/Main.jack")
 	if err != nil {
 		panic("erro")
 	}

@@ -25,8 +25,6 @@ type Parser struct {
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l}
 	// Read two tokens, so curToken and peekToken are both set
-	p.nextToken()
-	p.nextToken()
 	p.output = XML
 	return p
 }
@@ -36,45 +34,50 @@ func (p *Parser) nextToken() {
 }
 
 func (p *Parser) Compile() {
-	p.CompileClass()
+	p.nextToken()
+	//p.CompileClass()
+	p.CompileExpression()
 
 }
 
 func (p *Parser) CompileClass() {
 
-	p.expectTokenByLiteral("class")
 	xmlwrite.TagNonTerminal("class", p.output == XML)
-	p.nextToken()
 
-	p.expectTokenByType(token.IDENT)
+	p.expectPeek(token.CLASS)
 	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
-	p.nextToken()
 
-	p.expectTokenByLiteral("{")
+	p.expectPeek(token.IDENT)
 	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
-	p.nextToken()
+
+	p.expectPeek(token.LBRACE)
+	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
 
 	xmlwrite.UntagNonTerminal("class", p.output == XML)
 
 }
 
-// book write an interpreter in go
-/*
-func (p *Parser) curTokenIs(t string) bool {
-	return p.curToken.Literal == t || string(p.curToken.Type) == t // I am not sure about this
+func (p *Parser) CompileExpression() {
+	xmlwrite.TagNonTerminal("EXPRESSION", p.output == XML)
+
+	xmlwrite.UntagNonTerminal("EXPRESSION", p.output == XML)
 }
 
-func (p *Parser) peekTokenIs(t string) bool {
-	return p.peekToken.Literal == t || string(p.peekToken.Type) == t // I am not sure about this
+func (p *Parser) curTokenIs(t token.TokenType) bool {
+	return p.curToken.Type == t
 }
 
-func (p *Parser) expectPeek(token string) bool {
-	if p.peekTokenIs(token) {
+func (p *Parser) peekTokenIs(t token.TokenType) bool {
+	return p.peekToken.Type == t
+}
+
+func (p *Parser) expectPeek(t token.TokenType) {
+	if p.peekTokenIs(t) {
 		p.nextToken()
-		return true
 	} else {
-		p.peekError(token)
-		return false
+		p.peekError(t)
+		fmt.Println(p.errors)
+		os.Exit(1)
 	}
 }
 
@@ -82,7 +85,13 @@ func (p *Parser) Errors() []string {
 	return p.errors
 }
 
-*/
+func (p *Parser) peekError(t token.TokenType) {
+	msg := fmt.Sprintf("expected next token to be %s, got %s instead",
+		t, p.peekToken.Type)
+	p.errors = append(p.errors, msg)
+}
+
+/*
 
 func (p *Parser) expectTokenByType(token token.TokenType) {
 	if p.curToken.Type == token {
@@ -105,3 +114,4 @@ func (p *Parser) expectTokenByLiteral(token string) {
 		os.Exit(1)
 	}
 }
+*/

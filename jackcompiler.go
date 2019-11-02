@@ -10,8 +10,10 @@ import (
 // https://golang.org/doc/code.html
 
 func main() {
-	//fmt.Println("Hello, world.")
-	input, err := ioutil.ReadFile("xmlwrite/Main.jack")
+
+	//xmlwrite.Imprime()
+
+	input, err := ioutil.ReadFile("xmlwrite/Expression.jack")
 	if err != nil {
 		panic("erro")
 	}
