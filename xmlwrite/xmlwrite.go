@@ -45,15 +45,9 @@ func PrintTerminal(tok token.Token, toPrint bool) {
 	}
 }
 
-func TagNonTerminal(nonTerminal string, toPrint bool) {
+func PrintNonTerminal(nonTerminal string, toPrint bool) {
 	if toPrint {
 		fmt.Println("<" + nonTerminal + ">")
-	}
-}
-
-func UntagNonTerminal(nonTerminal string, toPrint bool) {
-	if toPrint {
-		fmt.Println("</" + nonTerminal + ">")
 	}
 }
 
