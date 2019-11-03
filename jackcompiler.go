@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"os"
 
 	"github.com/profsergiocosta/jackcompiler-go/lexer"
 	"github.com/profsergiocosta/jackcompiler-go/parser"
@@ -13,7 +14,9 @@ func main() {
 
 	//xmlwrite.Imprime()
 
-	input, err := ioutil.ReadFile("xmlwrite/Expression.jack")
+	arg := os.Args[1:]
+
+	input, err := ioutil.ReadFile(arg[0])
 	if err != nil {
 		panic("erro")
 	}

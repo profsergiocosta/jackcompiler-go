@@ -1,3 +1,5 @@
 https://interpreterbook.com/waiig_code_1.3.zip
 
 go run github.com/profsergiocosta/jackcompiler-go/
+
+diff -i -w jack_files/Square.xml jack_files/compara_square.xml > teste.txt

@@ -35,13 +35,14 @@ func (p *Parser) nextToken() {
 
 func (p *Parser) Compile() {
 	p.nextToken()
-	//p.CompileClass()
+	p.CompileClass()
 	//p.CompileExpression()
 	//p.CompileDo()
 	//p.CompileWhile()
 	//p.CompileIf()
 	//p.CompileReturn()
-	p.CompileLet()
+	//p.CompileLet()
+	//p.CompileStatements()
 
 }
 
@@ -58,8 +59,179 @@ func (p *Parser) CompileClass() {
 	p.expectPeek(token.LBRACE)
 	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
 
+	for p.peekTokenIs(token.STATIC) || p.peekTokenIs(token.FIELD) {
+		p.CompileClassVarDec()
+	}
+
+	for p.peekTokenIs(token.FUNCTION) || p.peekTokenIs(token.CONSTRUCTOR) || p.peekTokenIs(token.METHOD) {
+		p.CompileSubroutine()
+	}
+
+	p.expectPeek(token.RBRACE)
+	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
 	xmlwrite.PrintNonTerminal("/class", p.output == XML)
 
+}
+
+func (p *Parser) CompileClassVarDec() {
+	xmlwrite.PrintNonTerminal("classVarDec", p.output == XML)
+
+	if p.peekTokenIs(token.FIELD) {
+		p.expectPeek(token.FIELD)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+	} else {
+		p.expectPeek(token.STATIC)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+	}
+
+	p.CompileType()
+
+	p.expectPeek(token.IDENT)
+	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+	for p.peekTokenIs(token.COMMA) {
+		p.expectPeek(token.COMMA)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+		p.expectPeek(token.IDENT)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+	}
+
+	p.expectPeek(token.SEMICOLON)
+	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+	xmlwrite.PrintNonTerminal("/classVarDec", p.output == XML)
+}
+
+func (p *Parser) CompileSubroutine() {
+	xmlwrite.PrintNonTerminal("subroutineDec", p.output == XML)
+
+	if p.peekTokenIs(token.CONSTRUCTOR) {
+		p.expectPeek(token.CONSTRUCTOR)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+	} else if p.peekTokenIs(token.FUNCTION) {
+		p.expectPeek(token.FUNCTION)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+	} else {
+		p.expectPeek(token.METHOD)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+	}
+
+	if p.peekTokenIs(token.VOID) {
+		p.expectPeek(token.VOID)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+	} else {
+		p.CompileType()
+	}
+
+	p.expectPeek(token.IDENT)
+	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+	p.expectPeek(token.LPAREN)
+	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+	if !p.peekTokenIs(token.RPAREN) {
+		p.CompileParameterList()
+	} else {
+		// because of compare xml
+		xmlwrite.PrintNonTerminal("parameterList", p.output == XML)
+		xmlwrite.PrintNonTerminal("/parameterList", p.output == XML)
+	}
+
+	p.expectPeek(token.RPAREN)
+	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+	p.CompileSubroutineBody()
+
+	xmlwrite.PrintNonTerminal("/subroutineDec", p.output == XML)
+}
+
+func (p *Parser) CompileSubroutineBody() {
+
+	xmlwrite.PrintNonTerminal("subroutineBody", p.output == XML)
+
+	p.expectPeek(token.LBRACE)
+	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+	for p.peekTokenIs(token.VAR) {
+		p.CompileVarDec()
+	}
+
+	p.CompileStatements()
+
+	p.expectPeek(token.RBRACE)
+	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+	xmlwrite.PrintNonTerminal("/subroutineBody", p.output == XML)
+}
+
+func (p *Parser) CompileVarDec() {
+	xmlwrite.PrintNonTerminal("varDec", p.output == XML)
+
+	p.expectPeek(token.VAR)
+	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+	p.CompileType()
+
+	p.expectPeek(token.IDENT)
+	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+	for p.peekTokenIs(token.COMMA) {
+		p.expectPeek(token.COMMA)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+		p.expectPeek(token.IDENT)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+	}
+
+	p.expectPeek(token.SEMICOLON)
+	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+	xmlwrite.PrintNonTerminal("/varDec", p.output == XML)
+}
+
+func (p *Parser) CompileParameterList() {
+	xmlwrite.PrintNonTerminal("parameterList", p.output == XML)
+	p.CompileType()
+	p.expectPeek(token.IDENT)
+	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+	for p.peekTokenIs(token.COMMA) {
+		p.expectPeek(token.COMMA)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+		p.CompileType()
+
+		p.expectPeek(token.IDENT)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+	}
+
+	xmlwrite.PrintNonTerminal("/parameterList", p.output == XML)
+}
+
+func (p *Parser) CompileType() {
+	switch p.peekToken.Type {
+	case token.INT:
+		p.expectPeek(token.INT)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+	case token.CHAR:
+		p.expectPeek(token.CHAR)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+	case token.BOOLEAN:
+		p.expectPeek(token.BOOLEAN)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+	case token.IDENT:
+		p.expectPeek(token.IDENT)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+	}
 }
 
 func (p *Parser) CompileExpression() {
@@ -78,7 +250,7 @@ func (p *Parser) CompileExpression() {
 func (p *Parser) CompileTerm() {
 	xmlwrite.PrintNonTerminal("TERM", p.output == XML)
 	switch p.peekToken.Type {
-	case token.INTCONST, token.KEYWORD, token.STRING:
+	case token.INTCONST, token.TRUE, token.FALSE, token.NULL, token.THIS, token.STRING:
 		p.nextToken()
 		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
 	case token.IDENT:
@@ -113,6 +285,7 @@ func (p *Parser) CompileTerm() {
 		p.CompileTerm()
 
 	default:
+		fmt.Println(p.peekToken)
 		fmt.Println("operdor unario nao reconhecido")
 		os.Exit(1)
 
@@ -126,6 +299,7 @@ func (p *Parser) CompileSubroutineCall() {
 	if p.curTokenIs(token.LPAREN) {
 		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
 		p.CompileExpressionList()
+
 		p.expectPeek(token.RPAREN)
 		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
 	} else {
@@ -138,8 +312,9 @@ func (p *Parser) CompileSubroutineCall() {
 		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
 
 		p.CompileExpressionList()
-		p.expectPeek(token.RPAREN)
 
+		p.expectPeek(token.RPAREN)
+		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
 	}
 
 }
@@ -190,7 +365,7 @@ func (p *Parser) CompileWhile() {
 	p.expectPeek(token.LBRACE)
 	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
 
-	// statements
+	p.CompileStatements()
 
 	p.expectPeek(token.RBRACE)
 	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
@@ -213,7 +388,7 @@ func (p *Parser) CompileIf() {
 	p.expectPeek(token.LBRACE)
 	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
 
-	// statements
+	p.CompileStatements()
 
 	p.expectPeek(token.RBRACE)
 	xmlwrite.PrintTerminal(p.curToken, p.output == XML)
@@ -225,7 +400,7 @@ func (p *Parser) CompileIf() {
 		p.expectPeek(token.LBRACE)
 		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
 
-		// statements
+		p.CompileStatements()
 
 		p.expectPeek(token.RBRACE)
 		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
@@ -279,15 +454,37 @@ func (p *Parser) CompileLet() {
 
 	xmlwrite.PrintNonTerminal("/letStatement", p.output == XML)
 }
+func (p *Parser) CompileStatements() {
+	xmlwrite.PrintNonTerminal("statements", p.output == XML)
+	p.CompileStatement()
+	xmlwrite.PrintNonTerminal("/statements", p.output == XML)
+}
+func (p *Parser) CompileStatement() {
+
+	switch p.peekToken.Type {
+	case token.LET:
+		p.CompileLet()
+		p.CompileStatement()
+	case token.DO:
+		p.CompileDo()
+		p.CompileStatement()
+	case token.IF:
+		p.CompileIf()
+		p.CompileStatement()
+	case token.WHILE:
+		p.CompileWhile()
+		p.CompileStatement()
+	case token.RETURN:
+		p.CompileReturn()
+		p.CompileStatement()
+	default:
+		return
+	}
+}
 
 /*
-    eat("=");
-    nextToken();
-    compileExpression();
-    eat(";");
-    untagNonTerminal("letStatement");
-	nextToken();
-*/
+
+ */
 
 func (p *Parser) curTokenIs(t token.TokenType) bool {
 	return p.curToken.Type == t

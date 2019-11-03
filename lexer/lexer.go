@@ -80,7 +80,7 @@ func (l *Lexer) NextToken() token.Token {
 			l.skipBlockComments()
 			return l.NextToken()
 		} else {
-			tok = newToken(token.SYMBOL, l.ch)
+			tok = newToken(token.SLASH, l.ch)
 		}
 
 	case 0:

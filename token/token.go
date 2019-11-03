@@ -16,8 +16,6 @@ const (
 	IDENT    = "IDENTIFIER" // identifiers: add, foobar, x, y, ...
 	INTCONST = "INTCONST"
 	STRING   = "STRINGCONST"
-	SYMBOL   = "SYMBOL"
-	KEYWORD  = "KEYWORD"
 
 	//  Symbols
 	// Operators

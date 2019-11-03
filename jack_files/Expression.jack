@@ -1,0 +1,21 @@
+
+do Memo.deAlloc(this);
+
+/*
+class Teste {
+    field int casa, porta;
+    field Ponto casa, porta;
+
+    function void main (int a, int x) {
+        var int k;
+        let a = 10;
+
+    }
+
+    method void f (int a, int x) {
+
+        let a = 10;
+
+    }
+}
+*/

@@ -13,7 +13,7 @@ func tagToken(tok token.Token) string {
 	value := tok.Literal
 	ttype := tok.Type
 
-	if tok.Type == token.SYMBOL {
+	if token.IsSymbol(tok.Literal[0]) {
 		switch tok.Literal {
 		case "<":
 			value = "&lt;"
