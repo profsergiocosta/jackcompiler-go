@@ -250,7 +250,7 @@ func (p *Parser) CompileTerm() {
 		p.CompileTerm()
 
 	default:
-		fmt.Println(p.peekToken)
+		//fmt.Println(p.peekToken)
 		fmt.Println("operdor unario nao reconhecido")
 		os.Exit(1)
 
@@ -439,7 +439,7 @@ func (p *Parser) expectPeek(t token.TokenType) {
 		p.nextToken()
 		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
 	} else {
-		p.peekError(t)
+		p.peekError(t, p.peekToken.Line)
 		fmt.Println(p.errors)
 		os.Exit(1)
 	}
@@ -449,8 +449,8 @@ func (p *Parser) Errors() []string {
 	return p.errors
 }
 
-func (p *Parser) peekError(t token.TokenType) {
-	msg := fmt.Sprintf("expected next token to be %s, got %s instead",
-		t, p.peekToken.Type)
+func (p *Parser) peekError(t token.TokenType, line int) {
+	msg := fmt.Sprintf(" %v: expected next token to be %s, got %s instead",
+		line, t, p.peekToken.Type)
 	p.errors = append(p.errors, msg)
 }
