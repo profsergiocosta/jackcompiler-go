@@ -259,6 +259,8 @@ func (p *Parser) CompileTerm() {
 	case token.IDENT:
 		p.expectPeek(token.IDENT)
 
+		p.st.Resolve(p.curToken.Literal)
+
 		switch p.peekToken.Type {
 		case token.LBRACKET:
 			p.expectPeek(token.LBRACKET)
@@ -419,12 +421,7 @@ func (p *Parser) CompileLet() {
 	p.expectPeek(token.IDENT)
 
 	varName := p.curToken.Literal
-	_, hasDefined := p.st.Resolve(varName)
-
-	if !hasDefined {
-		fmt.Printf("identifier %s not defined \n", varName)
-		os.Exit(1)
-	}
+	p.st.Resolve(varName)
 
 	if p.peekTokenIs(token.LBRACKET) {
 		p.expectPeek(token.LBRACKET)

@@ -1,5 +1,10 @@
 package symboltable
 
+import (
+	"fmt"
+	"os"
+)
+
 type SymbolScope string
 
 const (
@@ -71,9 +76,15 @@ func (s *SymbolTable) Define(name string, ttype string, scope SymbolScope) {
 
 }
 
-func (s *SymbolTable) Resolve(name string) (Symbol, bool) {
-	sym, ok := s.lookup(name)
-	return sym, ok
+func (s *SymbolTable) Resolve(name string) Symbol {
+	sym, hasDefined := s.lookup(name)
+
+	if !hasDefined {
+		fmt.Printf("identifier %s not defined \n", name)
+		os.Exit(1)
+	}
+
+	return sym
 
 }
 
