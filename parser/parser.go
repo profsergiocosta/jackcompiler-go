@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/profsergiocosta/jackcompiler-go/lexer"
+	"github.com/profsergiocosta/jackcompiler-go/symboltable"
 	"github.com/profsergiocosta/jackcompiler-go/token"
 	"github.com/profsergiocosta/jackcompiler-go/xmlwrite"
 )
@@ -65,17 +66,23 @@ func (p *Parser) CompileClass() {
 func (p *Parser) CompileClassVarDec() {
 	xmlwrite.PrintNonTerminal("classVarDec", p.output == XML)
 
+	scope := ""
+
 	if p.peekTokenIs(token.FIELD) {
 		p.expectPeek(token.FIELD)
-
+		scope = token.FIELD
 	} else {
 		p.expectPeek(token.STATIC)
-
+		scope = token.STATIC
 	}
 
 	p.CompileType()
+	ttype := p.curToken.Literal
 
 	p.expectPeek(token.IDENT)
+
+	name := p.curToken.Literal
+	st := symboltable.NewSymbolTable()
 
 	for p.peekTokenIs(token.COMMA) {
 		p.expectPeek(token.COMMA)
