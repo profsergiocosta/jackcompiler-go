@@ -3,8 +3,10 @@ package parser
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/profsergiocosta/jackcompiler-go/symboltable"
+	"github.com/profsergiocosta/jackcompiler-go/vmwriter"
 
 	"github.com/profsergiocosta/jackcompiler-go/lexer"
 	"github.com/profsergiocosta/jackcompiler-go/token"
@@ -24,6 +26,7 @@ type Parser struct {
 	errors    []string
 	st        *symboltable.SymbolTable
 	className string
+	vm        *vmwriter.VMWriter
 }
 
 func New(l *lexer.Lexer) *Parser {
@@ -31,6 +34,8 @@ func New(l *lexer.Lexer) *Parser {
 	// Read two tokens, so curToken and peekToken are both set
 	p.output = XML
 	p.st = symboltable.NewSymbolTable()
+	p.vm = vmwriter.New("apagar.vm")
+	p.nextToken()
 	return p
 }
 func (p *Parser) nextToken() {
@@ -39,7 +44,7 @@ func (p *Parser) nextToken() {
 }
 
 func (p *Parser) Compile() {
-	p.nextToken()
+	//p.nextToken()
 	p.CompileClass()
 }
 
@@ -244,7 +249,16 @@ func (p *Parser) CompileExpression() {
 	for !p.peekTokenIs(token.EOF) && token.IsOperator(p.peekToken.Literal[0]) {
 		p.nextToken()
 		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+
+		op := p.curToken.Type
+
 		p.CompileTerm()
+
+		switch op {
+		case token.PLUS:
+			p.vm.WriteArithmetic("add")
+		}
+
 	}
 
 	xmlwrite.PrintNonTerminal("/EXPRESSION", p.output == XML)
@@ -255,25 +269,28 @@ func (p *Parser) CompileTerm() {
 	switch p.peekToken.Type {
 	case token.INTCONST, token.TRUE, token.FALSE, token.NULL, token.THIS, token.STRING:
 		p.nextToken()
+		p.vm.WritePush("const", p.curTokenAsInt())
 		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
 	case token.IDENT:
 		p.expectPeek(token.IDENT)
 
-		p.st.Resolve(p.curToken.Literal)
+		identName := p.curToken.Literal
+		//p.st.Resolve(p.curToken.Literal)
 
 		switch p.peekToken.Type {
-		case token.LBRACKET:
+		case token.LBRACKET: // is array
 			p.expectPeek(token.LBRACKET)
 
 			p.CompileExpression()
 
 			p.expectPeek(token.RBRACKET)
 
-		case token.LPAREN, token.DOT:
+		case token.LPAREN, token.DOT: //is subroutine
 			p.CompileSubroutineCall()
 
-		default:
-
+		default: // is variable
+			sym := p.st.Resolve(identName)
+			p.vm.WritePush("local", sym.Index)
 		}
 
 	case token.LPAREN:
@@ -290,7 +307,7 @@ func (p *Parser) CompileTerm() {
 
 	default:
 		//fmt.Println(p.peekToken)
-		fmt.Println("operdor unario nao reconhecido")
+		fmt.Printf("%v %v unario operator not recognized\n", p.peekToken, p.curToken)
 		os.Exit(1)
 
 	}
@@ -495,4 +512,18 @@ func (p *Parser) peekError(t token.TokenType, line int) {
 	msg := fmt.Sprintf(" %v: expected next token to be %s, got %s instead",
 		line, t, p.peekToken.Type)
 	p.errors = append(p.errors, msg)
+}
+
+//// auxiliars
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
+
+func (p *Parser) curTokenAsInt() int {
+	i1, err := strconv.Atoi(p.curToken.Literal)
+	check(err)
+	return i1
 }

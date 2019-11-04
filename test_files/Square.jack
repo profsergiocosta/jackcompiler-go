@@ -14,7 +14,7 @@ class Square {
       let x = Ax;
       let y = Ay;
       let size = Asize;
-      do draw(ab);
+      do draw();
       return x;
    }
 

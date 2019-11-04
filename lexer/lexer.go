@@ -51,7 +51,7 @@ func (l *Lexer) identifier() string {
 	return l.currToken.Literal
 }
 
-func (l *Lexer) intVal() int {
+func (l *Lexer) IntVal() int {
 	i1, err := strconv.Atoi(l.currToken.Literal)
 	if err == nil {
 		return i1

@@ -27,15 +27,6 @@ type SymbolTable struct {
 	numDefinitions map[SymbolScope]int
 }
 
-/*
-func New(input string) *Lexer {
-	l := &Lexer{input: input}
-	l.readChar()
-	l.curLine = 1
-	return l
-}
-*/
-
 func NewSymbolTable() *SymbolTable {
 	s1 := make(map[string]Symbol)
 	s2 := make(map[string]Symbol)

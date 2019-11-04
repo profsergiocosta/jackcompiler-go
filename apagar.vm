@@ -1,0 +1,5 @@
+push const 10
+push const 50
+add
+push const 8
+add
