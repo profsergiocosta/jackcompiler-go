@@ -57,10 +57,10 @@ func (s *SymbolTable) StartSubroutine() {
 func (s *SymbolTable) Define(name string, ttype string, scope SymbolScope) {
 
 	if scope == STATIC || scope == FIELD {
-		symbol := Symbol{Name: name, Type: ttype, Index: s.numDefinitions[scope]}
+		symbol := Symbol{Name: name, Type: ttype, Scope: scope, Index: s.numDefinitions[scope]}
 		s.classScope[name] = symbol
 	} else {
-		symbol := Symbol{Name: name, Type: ttype, Index: s.numDefinitions[scope]}
+		symbol := Symbol{Name: name, Type: ttype, Scope: scope, Index: s.numDefinitions[scope]}
 		s.subRoutineScope[name] = symbol
 	}
 	s.numDefinitions[scope]++

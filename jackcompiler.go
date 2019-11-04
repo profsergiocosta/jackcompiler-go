@@ -22,7 +22,7 @@ func main() {
 	}
 	l := lexer.New(string(input))
 	p := parser.New(l)
-	//p.Compile()
-	p.CompileExpression()
+	p.Compile()
+	//p.CompileExpression()
 
 }

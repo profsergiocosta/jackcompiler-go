@@ -5,6 +5,24 @@ import (
 	"os"
 )
 
+/*
+enum Segment { CONST, ARG, LOCAL, STATIC, THIS, THAT, POINTER, TEMP };
+enum Command { ADD, SUB, NEG, EQ, GT, LT, AND, OR, NOT };
+*/
+
+type Segment string
+
+const (
+	STATIC  Segment = "static"
+	FIELD   Segment = "field"
+	ARG     Segment = "arg"
+	LOCAL   Segment = "local"
+	CONST   Segment = "const"
+	THIS    Segment = "this"
+	THAT    Segment = "that"
+	POINTER Segment = "pointer"
+)
+
 func check(e error) {
 	if e != nil {
 		panic(e)
@@ -24,7 +42,7 @@ func New(pathName string) *VMWriter {
 	return vm
 }
 
-func (vm *VMWriter) WritePush(segment string, index int) {
+func (vm *VMWriter) WritePush(segment Segment, index int) {
 	s := fmt.Sprintf("push %s %d\n", segment, index)
 	vm.out.WriteString(s)
 }

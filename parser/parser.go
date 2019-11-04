@@ -171,7 +171,6 @@ func (p *Parser) CompileVarDec() {
 
 	p.expectPeek(token.VAR)
 
-	p.expectPeek(token.VAR)
 	var scope symboltable.SymbolScope = symboltable.VAR
 
 	p.CompileType()
@@ -269,7 +268,7 @@ func (p *Parser) CompileTerm() {
 	switch p.peekToken.Type {
 	case token.INTCONST, token.TRUE, token.FALSE, token.NULL, token.THIS, token.STRING:
 		p.nextToken()
-		p.vm.WritePush("const", p.curTokenAsInt())
+		p.vm.WritePush(vmwriter.CONST, p.curTokenAsInt())
 		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
 	case token.IDENT:
 		p.expectPeek(token.IDENT)
@@ -290,7 +289,8 @@ func (p *Parser) CompileTerm() {
 
 		default: // is variable
 			sym := p.st.Resolve(identName)
-			p.vm.WritePush("local", sym.Index)
+			fmt.Printf(":: %v\n", sym)
+			p.vm.WritePush(scopeToSegment(sym.Scope), sym.Index)
 		}
 
 	case token.LPAREN:
@@ -526,4 +526,20 @@ func (p *Parser) curTokenAsInt() int {
 	i1, err := strconv.Atoi(p.curToken.Literal)
 	check(err)
 	return i1
+}
+
+func scopeToSegment(scope symboltable.SymbolScope) vmwriter.Segment {
+	switch scope {
+	case symboltable.STATIC:
+		return vmwriter.STATIC
+	case symboltable.FIELD:
+		return vmwriter.FIELD
+	case symboltable.VAR:
+		return vmwriter.LOCAL
+	case symboltable.ARG:
+		return vmwriter.ARG
+	default:
+
+	}
+	panic("scope undefined")
 }
