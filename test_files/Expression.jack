@@ -1,14 +1,7 @@
 
 
 class Teste {
-    field int a10, b;
-
-    function void main (int a, int x) {
-        var int k;
-        //let a = 10 + 12 + k  + b;
-        do funcao(x + a);
-
-    }
+    field int d2;
 
 
 }

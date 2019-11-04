@@ -51,7 +51,7 @@ func PrintNonTerminal(nonTerminal string, toPrint bool) {
 	}
 }
 
-func Imprime() {
+func Imprime(path string) {
 	/*
 		input := `let five = 5;
 		let ten = "10";
@@ -61,7 +61,7 @@ func Imprime() {
 		let result = add(five, ten);`
 	*/
 
-	input, err := ioutil.ReadFile("xmlwrite/Main.jack")
+	input, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic("erro")
 	}
