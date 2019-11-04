@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/profsergiocosta/jackcompiler-go/lexer"
 	"github.com/profsergiocosta/jackcompiler-go/symboltable"
+
+	"github.com/profsergiocosta/jackcompiler-go/lexer"
 	"github.com/profsergiocosta/jackcompiler-go/token"
 	"github.com/profsergiocosta/jackcompiler-go/xmlwrite"
 )
@@ -21,12 +22,15 @@ type Parser struct {
 	peekToken token.Token
 	output    string
 	errors    []string
+	st        *symboltable.SymbolTable
+	className string
 }
 
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l}
 	// Read two tokens, so curToken and peekToken are both set
 	p.output = XML
+	p.st = symboltable.NewSymbolTable()
 	return p
 }
 func (p *Parser) nextToken() {
@@ -46,6 +50,8 @@ func (p *Parser) CompileClass() {
 	p.expectPeek(token.CLASS)
 
 	p.expectPeek(token.IDENT)
+	p.className = p.curToken.Literal
+	fmt.Println(p.className)
 
 	p.expectPeek(token.LBRACE)
 
@@ -66,7 +72,7 @@ func (p *Parser) CompileClass() {
 func (p *Parser) CompileClassVarDec() {
 	xmlwrite.PrintNonTerminal("classVarDec", p.output == XML)
 
-	scope := ""
+	var scope symboltable.SymbolScope
 
 	if p.peekTokenIs(token.FIELD) {
 		p.expectPeek(token.FIELD)
@@ -82,13 +88,15 @@ func (p *Parser) CompileClassVarDec() {
 	p.expectPeek(token.IDENT)
 
 	name := p.curToken.Literal
-	st := symboltable.NewSymbolTable()
+
+	p.st.Define(name, ttype, scope)
 
 	for p.peekTokenIs(token.COMMA) {
 		p.expectPeek(token.COMMA)
-
 		p.expectPeek(token.IDENT)
 
+		name := p.curToken.Literal
+		p.st.Define(name, ttype, scope)
 	}
 
 	p.expectPeek(token.SEMICOLON)
@@ -107,7 +115,7 @@ func (p *Parser) CompileSubroutine() {
 
 	} else {
 		p.expectPeek(token.METHOD)
-
+		p.st.Define("this", p.className, symboltable.ARG)
 	}
 
 	if p.peekTokenIs(token.VOID) {
@@ -158,15 +166,25 @@ func (p *Parser) CompileVarDec() {
 
 	p.expectPeek(token.VAR)
 
+	p.expectPeek(token.VAR)
+	var scope symboltable.SymbolScope = symboltable.VAR
+
 	p.CompileType()
+	ttype := p.curToken.Literal
 
 	p.expectPeek(token.IDENT)
+
+	name := p.curToken.Literal
+
+	p.st.Define(name, ttype, scope)
 
 	for p.peekTokenIs(token.COMMA) {
 		p.expectPeek(token.COMMA)
 
 		p.expectPeek(token.IDENT)
+		name := p.curToken.Literal
 
+		p.st.Define(name, ttype, scope)
 	}
 
 	p.expectPeek(token.SEMICOLON)
@@ -176,15 +194,27 @@ func (p *Parser) CompileVarDec() {
 
 func (p *Parser) CompileParameterList() {
 	xmlwrite.PrintNonTerminal("parameterList", p.output == XML)
+
+	var scope symboltable.SymbolScope = symboltable.ARG
+
 	p.CompileType()
+	ttype := p.curToken.Literal
+
 	p.expectPeek(token.IDENT)
+	name := p.curToken.Literal
+
+	p.st.Define(name, ttype, scope)
 
 	for p.peekTokenIs(token.COMMA) {
 		p.expectPeek(token.COMMA)
 
 		p.CompileType()
+		ttype := p.curToken.Literal
 
 		p.expectPeek(token.IDENT)
+
+		name := p.curToken.Literal
+		p.st.Define(name, ttype, scope)
 	}
 
 	xmlwrite.PrintNonTerminal("/parameterList", p.output == XML)
@@ -387,6 +417,14 @@ func (p *Parser) CompileLet() {
 	p.expectPeek(token.LET)
 
 	p.expectPeek(token.IDENT)
+
+	varName := p.curToken.Literal
+	_, hasDefined := p.st.Resolve(varName)
+
+	if !hasDefined {
+		fmt.Printf("identifier %s not defined \n", varName)
+		os.Exit(1)
+	}
 
 	if p.peekTokenIs(token.LBRACKET) {
 		p.expectPeek(token.LBRACKET)

@@ -11,7 +11,7 @@ class Square {
    field int size; 
 
    constructor Square new(int Ax, int Ay, int Asize) {
-      let x = Ax;
+      let xx = Ax;
       let y = Ay;
       let size = Asize;
       do draw();
