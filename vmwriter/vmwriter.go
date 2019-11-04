@@ -5,10 +5,19 @@ import (
 	"os"
 )
 
-/*
-enum Segment { CONST, ARG, LOCAL, STATIC, THIS, THAT, POINTER, TEMP };
-enum Command { ADD, SUB, NEG, EQ, GT, LT, AND, OR, NOT };
-*/
+type Command string
+
+const (
+	ADD Command = "add"
+	SUB Command = "sub"
+	NEG Command = "neg"
+	EQ  Command = "eq"
+	GT  Command = "gt"
+	LT  Command = "lt"
+	AND Command = "and"
+	OR  Command = "or"
+	NOT Command = "not"
+)
 
 type Segment string
 
@@ -47,7 +56,12 @@ func (vm *VMWriter) WritePush(segment Segment, index int) {
 	vm.out.WriteString(s)
 }
 
-func (vm *VMWriter) WriteArithmetic(command string) {
+func (vm *VMWriter) WritePop(segment Segment, index int) {
+	s := fmt.Sprintf("pop %s %d\n", segment, index)
+	vm.out.WriteString(s)
+}
+
+func (vm *VMWriter) WriteArithmetic(command Command) {
 	s := fmt.Sprintf("%s\n", command)
 	vm.out.WriteString(s)
 }

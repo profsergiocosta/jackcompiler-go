@@ -10,7 +10,7 @@ import (
 
 	"github.com/profsergiocosta/jackcompiler-go/lexer"
 	"github.com/profsergiocosta/jackcompiler-go/token"
-	"github.com/profsergiocosta/jackcompiler-go/xmlwrite"
+	xmlwriter "github.com/profsergiocosta/jackcompiler-go/xmlwrite"
 )
 
 const (
@@ -44,13 +44,12 @@ func (p *Parser) nextToken() {
 }
 
 func (p *Parser) Compile() {
-	//p.nextToken()
 	p.CompileClass()
 }
 
 func (p *Parser) CompileClass() {
 
-	xmlwrite.PrintNonTerminal("class", p.output == XML)
+	xmlwriter.PrintNonTerminal("class", p.output == XML)
 
 	p.expectPeek(token.CLASS)
 
@@ -70,12 +69,12 @@ func (p *Parser) CompileClass() {
 
 	p.expectPeek(token.RBRACE)
 
-	xmlwrite.PrintNonTerminal("/class", p.output == XML)
+	xmlwriter.PrintNonTerminal("/class", p.output == XML)
 
 }
 
 func (p *Parser) CompileClassVarDec() {
-	xmlwrite.PrintNonTerminal("classVarDec", p.output == XML)
+	xmlwriter.PrintNonTerminal("classVarDec", p.output == XML)
 
 	var scope symboltable.SymbolScope
 
@@ -106,11 +105,11 @@ func (p *Parser) CompileClassVarDec() {
 
 	p.expectPeek(token.SEMICOLON)
 
-	xmlwrite.PrintNonTerminal("/classVarDec", p.output == XML)
+	xmlwriter.PrintNonTerminal("/classVarDec", p.output == XML)
 }
 
 func (p *Parser) CompileSubroutine() {
-	xmlwrite.PrintNonTerminal("subroutineDec", p.output == XML)
+	xmlwriter.PrintNonTerminal("subroutineDec", p.output == XML)
 
 	if p.peekTokenIs(token.CONSTRUCTOR) {
 		p.expectPeek(token.CONSTRUCTOR)
@@ -138,20 +137,20 @@ func (p *Parser) CompileSubroutine() {
 		p.CompileParameterList()
 	} else {
 		// because of compare xml
-		xmlwrite.PrintNonTerminal("parameterList", p.output == XML)
-		xmlwrite.PrintNonTerminal("/parameterList", p.output == XML)
+		xmlwriter.PrintNonTerminal("parameterList", p.output == XML)
+		xmlwriter.PrintNonTerminal("/parameterList", p.output == XML)
 	}
 
 	p.expectPeek(token.RPAREN)
 
 	p.CompileSubroutineBody()
 
-	xmlwrite.PrintNonTerminal("/subroutineDec", p.output == XML)
+	xmlwriter.PrintNonTerminal("/subroutineDec", p.output == XML)
 }
 
 func (p *Parser) CompileSubroutineBody() {
 
-	xmlwrite.PrintNonTerminal("subroutineBody", p.output == XML)
+	xmlwriter.PrintNonTerminal("subroutineBody", p.output == XML)
 
 	p.expectPeek(token.LBRACE)
 
@@ -163,11 +162,11 @@ func (p *Parser) CompileSubroutineBody() {
 
 	p.expectPeek(token.RBRACE)
 
-	xmlwrite.PrintNonTerminal("/subroutineBody", p.output == XML)
+	xmlwriter.PrintNonTerminal("/subroutineBody", p.output == XML)
 }
 
 func (p *Parser) CompileVarDec() {
-	xmlwrite.PrintNonTerminal("varDec", p.output == XML)
+	xmlwriter.PrintNonTerminal("varDec", p.output == XML)
 
 	p.expectPeek(token.VAR)
 
@@ -193,11 +192,11 @@ func (p *Parser) CompileVarDec() {
 
 	p.expectPeek(token.SEMICOLON)
 
-	xmlwrite.PrintNonTerminal("/varDec", p.output == XML)
+	xmlwriter.PrintNonTerminal("/varDec", p.output == XML)
 }
 
 func (p *Parser) CompileParameterList() {
-	xmlwrite.PrintNonTerminal("parameterList", p.output == XML)
+	xmlwriter.PrintNonTerminal("parameterList", p.output == XML)
 
 	var scope symboltable.SymbolScope = symboltable.ARG
 
@@ -221,7 +220,7 @@ func (p *Parser) CompileParameterList() {
 		p.st.Define(name, ttype, scope)
 	}
 
-	xmlwrite.PrintNonTerminal("/parameterList", p.output == XML)
+	xmlwriter.PrintNonTerminal("/parameterList", p.output == XML)
 }
 
 func (p *Parser) CompileType() {
@@ -242,12 +241,12 @@ func (p *Parser) CompileType() {
 }
 
 func (p *Parser) CompileExpression() {
-	xmlwrite.PrintNonTerminal("EXPRESSION", p.output == XML)
+	xmlwriter.PrintNonTerminal("EXPRESSION", p.output == XML)
 	p.CompileTerm()
 
 	for !p.peekTokenIs(token.EOF) && token.IsOperator(p.peekToken.Literal[0]) {
 		p.nextToken()
-		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+		xmlwriter.PrintTerminal(p.curToken, p.output == XML)
 
 		op := p.curToken.Type
 
@@ -260,16 +259,16 @@ func (p *Parser) CompileExpression() {
 
 	}
 
-	xmlwrite.PrintNonTerminal("/EXPRESSION", p.output == XML)
+	xmlwriter.PrintNonTerminal("/EXPRESSION", p.output == XML)
 }
 
 func (p *Parser) CompileTerm() {
-	xmlwrite.PrintNonTerminal("TERM", p.output == XML)
+	xmlwriter.PrintNonTerminal("TERM", p.output == XML)
 	switch p.peekToken.Type {
 	case token.INTCONST, token.TRUE, token.FALSE, token.NULL, token.THIS, token.STRING:
 		p.nextToken()
 		p.vm.WritePush(vmwriter.CONST, p.curTokenAsInt())
-		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+		xmlwriter.PrintTerminal(p.curToken, p.output == XML)
 	case token.IDENT:
 		p.expectPeek(token.IDENT)
 
@@ -289,7 +288,6 @@ func (p *Parser) CompileTerm() {
 
 		default: // is variable
 			sym := p.st.Resolve(identName)
-			fmt.Printf(":: %v\n", sym)
 			p.vm.WritePush(scopeToSegment(sym.Scope), sym.Index)
 		}
 
@@ -302,7 +300,7 @@ func (p *Parser) CompileTerm() {
 
 	case token.MINUS, token.NOT:
 		p.nextToken()
-		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+		xmlwriter.PrintTerminal(p.curToken, p.output == XML)
 		p.CompileTerm()
 
 	default:
@@ -311,7 +309,7 @@ func (p *Parser) CompileTerm() {
 		os.Exit(1)
 
 	}
-	xmlwrite.PrintNonTerminal("/TERM", p.output == XML)
+	xmlwriter.PrintNonTerminal("/TERM", p.output == XML)
 }
 
 func (p *Parser) CompileSubroutineCall() {
@@ -338,7 +336,7 @@ func (p *Parser) CompileSubroutineCall() {
 }
 
 func (p *Parser) CompileExpressionList() {
-	xmlwrite.PrintNonTerminal("ExpressionList", p.output == XML)
+	xmlwriter.PrintNonTerminal("ExpressionList", p.output == XML)
 	if !p.peekTokenIs(token.RPAREN) {
 		p.CompileExpression()
 	}
@@ -350,12 +348,12 @@ func (p *Parser) CompileExpressionList() {
 		p.CompileExpression()
 	}
 
-	xmlwrite.PrintNonTerminal("/ExpressionList", p.output == XML)
+	xmlwriter.PrintNonTerminal("/ExpressionList", p.output == XML)
 
 }
 
 func (p *Parser) CompileDo() {
-	xmlwrite.PrintNonTerminal("doStatement", p.output == XML)
+	xmlwriter.PrintNonTerminal("doStatement", p.output == XML)
 	p.expectPeek(token.DO)
 
 	p.expectPeek(token.IDENT)
@@ -363,11 +361,11 @@ func (p *Parser) CompileDo() {
 	p.CompileSubroutineCall()
 	p.expectPeek(token.SEMICOLON)
 
-	xmlwrite.PrintNonTerminal("/doStatement", p.output == XML)
+	xmlwriter.PrintNonTerminal("/doStatement", p.output == XML)
 }
 
 func (p *Parser) CompileWhile() {
-	xmlwrite.PrintNonTerminal("whileStatement", p.output == XML)
+	xmlwriter.PrintNonTerminal("whileStatement", p.output == XML)
 	p.expectPeek(token.WHILE)
 
 	p.expectPeek(token.LPAREN)
@@ -382,11 +380,11 @@ func (p *Parser) CompileWhile() {
 
 	p.expectPeek(token.RBRACE)
 
-	xmlwrite.PrintNonTerminal("/whileStatement", p.output == XML)
+	xmlwriter.PrintNonTerminal("/whileStatement", p.output == XML)
 }
 
 func (p *Parser) CompileIf() {
-	xmlwrite.PrintNonTerminal("ifStatement", p.output == XML)
+	xmlwriter.PrintNonTerminal("ifStatement", p.output == XML)
 	p.expectPeek(token.IF)
 
 	p.expectPeek(token.LPAREN)
@@ -412,11 +410,11 @@ func (p *Parser) CompileIf() {
 
 	}
 
-	xmlwrite.PrintNonTerminal("/ifStatement", p.output == XML)
+	xmlwriter.PrintNonTerminal("/ifStatement", p.output == XML)
 }
 
 func (p *Parser) CompileReturn() {
-	xmlwrite.PrintNonTerminal("returnStatement", p.output == XML)
+	xmlwriter.PrintNonTerminal("returnStatement", p.output == XML)
 
 	p.expectPeek(token.RETURN)
 
@@ -426,12 +424,12 @@ func (p *Parser) CompileReturn() {
 
 	p.expectPeek(token.SEMICOLON)
 
-	xmlwrite.PrintNonTerminal("/returnStatement", p.output == XML)
+	xmlwriter.PrintNonTerminal("/returnStatement", p.output == XML)
 }
 
 func (p *Parser) CompileLet() {
 
-	xmlwrite.PrintNonTerminal("letStatement", p.output == XML)
+	xmlwriter.PrintNonTerminal("letStatement", p.output == XML)
 
 	p.expectPeek(token.LET)
 
@@ -455,12 +453,12 @@ func (p *Parser) CompileLet() {
 
 	p.expectPeek(token.SEMICOLON)
 
-	xmlwrite.PrintNonTerminal("/letStatement", p.output == XML)
+	xmlwriter.PrintNonTerminal("/letStatement", p.output == XML)
 }
 func (p *Parser) CompileStatements() {
-	xmlwrite.PrintNonTerminal("statements", p.output == XML)
+	xmlwriter.PrintNonTerminal("statements", p.output == XML)
 	p.CompileStatement()
-	xmlwrite.PrintNonTerminal("/statements", p.output == XML)
+	xmlwriter.PrintNonTerminal("/statements", p.output == XML)
 }
 func (p *Parser) CompileStatement() {
 
@@ -496,7 +494,7 @@ func (p *Parser) peekTokenIs(t token.TokenType) bool {
 func (p *Parser) expectPeek(t token.TokenType) {
 	if p.peekTokenIs(t) {
 		p.nextToken()
-		xmlwrite.PrintTerminal(p.curToken, p.output == XML)
+		xmlwriter.PrintTerminal(p.curToken, p.output == XML)
 	} else {
 		p.peekError(t, p.peekToken.Line)
 		fmt.Println(p.errors)

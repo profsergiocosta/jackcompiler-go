@@ -1,4 +1,4 @@
-package xmlwrite
+package xmlwriter
 
 import (
 	"fmt"
@@ -52,15 +52,6 @@ func PrintNonTerminal(nonTerminal string, toPrint bool) {
 }
 
 func Imprime(path string) {
-	/*
-		input := `let five = 5;
-		let ten = "10";
-		 hoje  é + casa
-		de sair para casa
-		let add = x / y;
-		let result = add(five, ten);`
-	*/
-
 	input, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic("erro")
