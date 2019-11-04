@@ -23,13 +23,13 @@ type Segment string
 
 const (
 	STATIC  Segment = "static"
-	FIELD   Segment = "field"
 	ARG     Segment = "arg"
 	LOCAL   Segment = "local"
-	CONST   Segment = "const"
+	CONST   Segment = "constant"
 	THIS    Segment = "this"
 	THAT    Segment = "that"
 	POINTER Segment = "pointer"
+	TEMP    Segment = "temp"
 )
 
 func check(e error) {
@@ -63,6 +63,36 @@ func (vm *VMWriter) WritePop(segment Segment, index int) {
 
 func (vm *VMWriter) WriteArithmetic(command Command) {
 	s := fmt.Sprintf("%s\n", command)
+	vm.out.WriteString(s)
+}
+
+func (vm *VMWriter) WriteCall(name string, nArgs int) {
+	s := fmt.Sprintf("call %s %d\n", name, nArgs)
+	vm.out.WriteString(s)
+}
+
+func (vm *VMWriter) WriteFunction(name string, nLocals int) {
+	s := fmt.Sprintf("function %s %d\n", name, nLocals)
+	vm.out.WriteString(s)
+}
+
+func (vm *VMWriter) WriteReturn() {
+	s := fmt.Sprintf("return\n")
+	vm.out.WriteString(s)
+}
+
+func (vm *VMWriter) WriteLabel(label string) {
+	s := fmt.Sprintf("label %s\n", label)
+	vm.out.WriteString(s)
+}
+
+func (vm *VMWriter) WriteGoto(label string) {
+	s := fmt.Sprintf("goto %s\n", label)
+	vm.out.WriteString(s)
+}
+
+func (vm *VMWriter) WriteIf(label string) {
+	s := fmt.Sprintf("if-goto %s\n", label)
 	vm.out.WriteString(s)
 }
 

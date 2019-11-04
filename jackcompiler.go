@@ -1,10 +1,8 @@
 package main
 
 import (
-	"io/ioutil"
 	"os"
 
-	"github.com/profsergiocosta/jackcompiler-go/lexer"
 	"github.com/profsergiocosta/jackcompiler-go/parser"
 )
 
@@ -14,14 +12,9 @@ func main() {
 
 	arg := os.Args[1:]
 
-	//xmlwrite.Imprime(arg[0])
+	//xmlwrite.PrintAll(arg[0])
 
-	input, err := ioutil.ReadFile(arg[0])
-	if err != nil {
-		panic("erro")
-	}
-	l := lexer.New(string(input))
-	p := parser.New(l)
+	p := parser.New(arg[0])
 	p.Compile()
 	//p.CompileExpression()
 

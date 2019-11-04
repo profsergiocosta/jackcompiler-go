@@ -2,8 +2,11 @@ package parser
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path"
 	"strconv"
+	"strings"
 
 	"github.com/profsergiocosta/jackcompiler-go/symboltable"
 	"github.com/profsergiocosta/jackcompiler-go/vmwriter"
@@ -19,23 +22,40 @@ const (
 )
 
 type Parser struct {
-	l         *lexer.Lexer
-	curToken  token.Token
-	peekToken token.Token
-	output    string
-	errors    []string
-	st        *symboltable.SymbolTable
-	className string
-	vm        *vmwriter.VMWriter
+	l             *lexer.Lexer
+	curToken      token.Token
+	peekToken     token.Token
+	output        string
+	errors        []string
+	st            *symboltable.SymbolTable
+	className     string
+	vm            *vmwriter.VMWriter
+	fileName      string
+	whileLabelNum int
+	ifLabelNum    int
 }
 
-func New(l *lexer.Lexer) *Parser {
+func FilenameWithoutExtension(fn string) string {
+	return strings.TrimSuffix(path.Base(fn), path.Ext(fn))
+}
+
+func New(pathName string) *Parser {
+
+	input, err := ioutil.ReadFile(pathName)
+	if err != nil {
+		panic("erro")
+	}
+	l := lexer.New(string(input))
+
 	p := &Parser{l: l}
-	// Read two tokens, so curToken and peekToken are both set
+	p.fileName = FilenameWithoutExtension(pathName)
+
 	p.output = XML
 	p.st = symboltable.NewSymbolTable()
 	p.vm = vmwriter.New("apagar.vm")
 	p.nextToken()
+	p.whileLabelNum = 0
+	p.ifLabelNum = 0
 	return p
 }
 func (p *Parser) nextToken() {
@@ -55,7 +75,13 @@ func (p *Parser) CompileClass() {
 
 	p.expectPeek(token.IDENT)
 	p.className = p.curToken.Literal
-	fmt.Println(p.className)
+	fmt.Println("888", p.fileName)
+
+	// criar um pacote para erro
+	if p.className != p.fileName {
+		fmt.Printf("In %s.jack (line %d): The class name doesn't match the file name\n", p.fileName, p.curToken.Line)
+		os.Exit(1)
+	}
 
 	p.expectPeek(token.LBRACE)
 
@@ -122,6 +148,8 @@ func (p *Parser) CompileSubroutine() {
 		p.st.Define("this", p.className, symboltable.ARG)
 	}
 
+	subroutineType := p.curToken.Type
+
 	if p.peekTokenIs(token.VOID) {
 		p.expectPeek(token.VOID)
 
@@ -130,6 +158,8 @@ func (p *Parser) CompileSubroutine() {
 	}
 
 	p.expectPeek(token.IDENT)
+
+	functionName := p.className + "." + p.curToken.Literal
 
 	p.expectPeek(token.LPAREN)
 
@@ -143,12 +173,12 @@ func (p *Parser) CompileSubroutine() {
 
 	p.expectPeek(token.RPAREN)
 
-	p.CompileSubroutineBody()
+	p.CompileSubroutineBody(functionName, subroutineType)
 
 	xmlwriter.PrintNonTerminal("/subroutineDec", p.output == XML)
 }
 
-func (p *Parser) CompileSubroutineBody() {
+func (p *Parser) CompileSubroutineBody(functionName string, subroutineType token.TokenType) {
 
 	xmlwriter.PrintNonTerminal("subroutineBody", p.output == XML)
 
@@ -156,6 +186,21 @@ func (p *Parser) CompileSubroutineBody() {
 
 	for p.peekTokenIs(token.VAR) {
 		p.CompileVarDec()
+	}
+
+	nLocals := p.st.VarCount(symboltable.VAR)
+
+	p.vm.WriteFunction(functionName, nLocals)
+
+	switch subroutineType {
+	case token.CONSTRUCTOR:
+		p.vm.WritePush(vmwriter.CONST, nLocals)
+		p.vm.WriteCall("Memory.alloc", 1)
+		p.vm.WritePop(vmwriter.POINTER, 0)
+
+	case token.METHOD:
+		p.vm.WritePush(vmwriter.ARG, 0)
+		p.vm.WritePop(vmwriter.POINTER, 0)
 	}
 
 	p.CompileStatements()
@@ -252,28 +297,81 @@ func (p *Parser) CompileExpression() {
 
 		p.CompileTerm()
 
-		switch op {
-		case token.PLUS:
-			p.vm.WriteArithmetic("add")
-		}
-
+		p.CompileOperators(op)
 	}
 
 	xmlwriter.PrintNonTerminal("/EXPRESSION", p.output == XML)
 }
 
+func (p *Parser) CompileOperators(op token.TokenType) {
+
+	switch op {
+	case token.PLUS:
+		p.vm.WriteArithmetic(vmwriter.ADD)
+	case token.MINUS:
+		p.vm.WriteArithmetic(vmwriter.SUB)
+	case token.ASTERISK:
+		p.vm.WriteCall("Math.multiply", 2)
+	case token.SLASH:
+		p.vm.WriteCall("Math.divide", 2)
+	case token.AND:
+		p.vm.WriteArithmetic(vmwriter.AND)
+	case token.OR:
+		p.vm.WriteArithmetic(vmwriter.OR)
+	case token.LT:
+		p.vm.WriteArithmetic(vmwriter.LT)
+	case token.GT:
+		p.vm.WriteArithmetic(vmwriter.GT)
+	case token.EQ:
+		p.vm.WriteArithmetic(vmwriter.EQ)
+	case token.NOT:
+		p.vm.WriteArithmetic(vmwriter.NOT)
+
+	}
+
+}
+
+func (p *Parser) CompileKeywordConst(v token.TokenType) {
+	switch v {
+	case token.TRUE:
+		p.expectPeek(token.TRUE)
+		p.vm.WritePush(vmwriter.CONST, 0)
+		p.vm.WriteArithmetic(vmwriter.NOT) // false is -1
+	case token.FALSE, token.NULL:
+		p.nextToken()
+		xmlwriter.PrintTerminal(p.curToken, p.output == XML)
+		p.vm.WritePush(vmwriter.CONST, 0)
+	case token.THIS:
+		p.expectPeek(token.THIS)
+		p.vm.WritePush(vmwriter.POINTER, 0)
+
+	}
+}
 func (p *Parser) CompileTerm() {
 	xmlwriter.PrintNonTerminal("TERM", p.output == XML)
 	switch p.peekToken.Type {
-	case token.INTCONST, token.TRUE, token.FALSE, token.NULL, token.THIS, token.STRING:
+	case token.INTCONST:
 		p.nextToken()
 		p.vm.WritePush(vmwriter.CONST, p.curTokenAsInt())
 		xmlwriter.PrintTerminal(p.curToken, p.output == XML)
+	case token.TRUE, token.FALSE, token.NULL, token.THIS:
+		p.CompileKeywordConst(p.peekToken.Type)
+
+	case token.STRING:
+		p.expectPeek(token.STRING)
+		xmlwriter.PrintTerminal(p.curToken, p.output == XML)
+
+		str := p.curToken.Literal
+		p.vm.WritePush(vmwriter.CONST, len(str))
+		p.vm.WriteCall("String.new", 1)
+		for i := 0; i < len(str); i++ {
+			p.vm.WritePush(vmwriter.CONST, int(str[i]))
+			p.vm.WriteCall("String.appendChar", 2)
+		}
+
 	case token.IDENT:
 		p.expectPeek(token.IDENT)
-
 		identName := p.curToken.Literal
-		//p.st.Resolve(p.curToken.Literal)
 
 		switch p.peekToken.Type {
 		case token.LBRACKET: // is array
@@ -281,7 +379,13 @@ func (p *Parser) CompileTerm() {
 
 			p.CompileExpression()
 
+			sym := p.st.Resolve(identName)
+			p.vm.WritePush(scopeToSegment(sym.Scope), sym.Index)
+			p.vm.WriteArithmetic(vmwriter.ADD)
+
 			p.expectPeek(token.RBRACKET)
+			p.vm.WritePop(vmwriter.POINTER, 1)
+			p.vm.WritePush(vmwriter.THAT, 0)
 
 		case token.LPAREN, token.DOT: //is subroutine
 			p.CompileSubroutineCall()
@@ -300,11 +404,17 @@ func (p *Parser) CompileTerm() {
 
 	case token.MINUS, token.NOT:
 		p.nextToken()
+		op := p.curToken.Type
+
 		xmlwriter.PrintTerminal(p.curToken, p.output == XML)
 		p.CompileTerm()
+		if op == token.MINUS {
+			p.vm.WriteArithmetic(vmwriter.NEG)
+		} else {
+			p.vm.WriteArithmetic(vmwriter.NOT)
+		}
 
 	default:
-		//fmt.Println(p.peekToken)
 		fmt.Printf("%v %v unario operator not recognized\n", p.peekToken, p.curToken)
 		os.Exit(1)
 
@@ -360,23 +470,56 @@ func (p *Parser) CompileDo() {
 
 	p.CompileSubroutineCall()
 	p.expectPeek(token.SEMICOLON)
+	p.vm.WritePop(vmwriter.TEMP, 0)
 
 	xmlwriter.PrintNonTerminal("/doStatement", p.output == XML)
 }
 
+/*
+label WHILE_EXP0
+push local 0
+not
+if-goto WHILE_END0
+push constant 60
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
+push local 0
+
+
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 60
+pop local 0
+label IF_FALSE0
+push constant 10
+*/
+
 func (p *Parser) CompileWhile() {
 	xmlwriter.PrintNonTerminal("whileStatement", p.output == XML)
+
+	labelWhileExp := fmt.Sprintf("WHILE_EXP%d", p.whileLabelNum)
+	labelWhileEnd := fmt.Sprintf("WHILE_END%d", p.whileLabelNum)
+	p.whileLabelNum++
+
+	p.vm.WriteLabel(labelWhileExp)
 	p.expectPeek(token.WHILE)
 
 	p.expectPeek(token.LPAREN)
 
 	p.CompileExpression()
+	p.vm.WriteArithmetic(vmwriter.NOT)
+	p.vm.WriteIf(labelWhileEnd)
 
 	p.expectPeek(token.RPAREN)
 
 	p.expectPeek(token.LBRACE)
 
 	p.CompileStatements()
+
+	p.vm.WriteGoto(labelWhileExp)
+	p.vm.WriteLabel(labelWhileEnd)
 
 	p.expectPeek(token.RBRACE)
 
@@ -420,6 +563,10 @@ func (p *Parser) CompileReturn() {
 
 	if !p.peekTokenIs(token.SEMICOLON) {
 		p.CompileExpression()
+		p.vm.WriteReturn()
+	} else {
+		p.vm.WritePush(vmwriter.CONST, 0)
+		p.vm.WriteReturn()
 	}
 
 	p.expectPeek(token.SEMICOLON)
@@ -429,6 +576,7 @@ func (p *Parser) CompileReturn() {
 
 func (p *Parser) CompileLet() {
 
+	isArray := false
 	xmlwriter.PrintNonTerminal("letStatement", p.output == XML)
 
 	p.expectPeek(token.LET)
@@ -436,20 +584,31 @@ func (p *Parser) CompileLet() {
 	p.expectPeek(token.IDENT)
 
 	varName := p.curToken.Literal
-	p.st.Resolve(varName)
+	sym := p.st.Resolve(varName)
 
 	if p.peekTokenIs(token.LBRACKET) {
 		p.expectPeek(token.LBRACKET)
 
 		p.CompileExpression()
+		p.vm.WritePush(scopeToSegment(sym.Scope), sym.Index)
 
+		p.vm.WriteArithmetic(vmwriter.ADD)
 		p.expectPeek(token.RBRACKET)
-
+		isArray = true
 	}
 
 	p.expectPeek(token.EQ)
 
 	p.CompileExpression()
+
+	if isArray {
+		p.vm.WritePop(vmwriter.TEMP, 0)
+		p.vm.WritePop(vmwriter.POINTER, 1)
+		p.vm.WritePush(vmwriter.TEMP, 0)
+		p.vm.WritePop(vmwriter.THAT, 0)
+	} else {
+		p.vm.WritePop(scopeToSegment(sym.Scope), sym.Index)
+	}
 
 	p.expectPeek(token.SEMICOLON)
 
@@ -531,7 +690,7 @@ func scopeToSegment(scope symboltable.SymbolScope) vmwriter.Segment {
 	case symboltable.STATIC:
 		return vmwriter.STATIC
 	case symboltable.FIELD:
-		return vmwriter.FIELD
+		return vmwriter.THIS
 	case symboltable.VAR:
 		return vmwriter.LOCAL
 	case symboltable.ARG:

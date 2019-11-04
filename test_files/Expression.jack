@@ -1,13 +1,17 @@
 
 
-class Teste {
-    field int a, b;
+class Expression {
 
-    function void main (int a2, int x) {
-        var int k;
-        //let a = 10 + 12 + k  + b;
-        do funcao(x + a);
+    function int main () {
+         var int a;
+         var String s;
+        // let a[4] = a[8] * 10;
+         //let s = "ola";
+         while (a) {
+             let a = 60;
+         }
 
+          return 10;
     }
 
 

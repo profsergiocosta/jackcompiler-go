@@ -51,7 +51,7 @@ func PrintNonTerminal(nonTerminal string, toPrint bool) {
 	}
 }
 
-func Imprime(path string) {
+func PrintAll(path string) {
 	input, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic("erro")
