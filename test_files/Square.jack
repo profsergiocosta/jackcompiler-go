@@ -9,14 +9,21 @@ class Square {
 
    field int x, y; 
    field int size; 
+   function int calc () {
+      return 1;
+   }
 
    constructor Square new(int Ax, int Ay, int Asize) {
+      var int k;
       let x = Ax;
       let y = Ay;
       let size = Asize;
+      let k = Square.calc();
       do draw();
-      return x;
+      return this;
    }
+
+
 
    method void dispose() {
       do Memory.deAlloc(this);

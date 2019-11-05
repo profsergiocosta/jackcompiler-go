@@ -1,11 +1,14 @@
+function Expression.funcao2 0
+push argument 0
+pop pointer 0
+push constant 0
+return
 function Expression.main 2
-label WHILE_EXP0
-push local 0
-not
-if-goto WHILE_END0
-push constant 60
-pop local 0
-goto WHILE_EXP0
-label WHILE_END0
+push argument 0
+pop pointer 0
 push constant 10
+push constant 20
+call Math.funcao 2
+pop local 0
+push constant 1
 return

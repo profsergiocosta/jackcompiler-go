@@ -36,7 +36,7 @@ type Parser struct {
 }
 
 func FilenameWithoutExtension(fn string) string {
-	return strings.TrimSuffix(path.Base(fn), path.Ext(fn))
+	return strings.TrimSuffix(fn, path.Ext(fn))
 }
 
 func New(pathName string) *Parser {
@@ -48,11 +48,11 @@ func New(pathName string) *Parser {
 	l := lexer.New(string(input))
 
 	p := &Parser{l: l}
-	p.fileName = FilenameWithoutExtension(pathName)
+	p.fileName = FilenameWithoutExtension(path.Base(pathName))
 
-	p.output = XML
+	p.output = VM
 	p.st = symboltable.NewSymbolTable()
-	p.vm = vmwriter.New("apagar.vm")
+	p.vm = vmwriter.New(FilenameWithoutExtension(pathName) + ".vm1")
 	p.nextToken()
 	p.whileLabelNum = 0
 	p.ifLabelNum = 0
@@ -75,7 +75,6 @@ func (p *Parser) CompileClass() {
 
 	p.expectPeek(token.IDENT)
 	p.className = p.curToken.Literal
-	fmt.Println("888", p.fileName)
 
 	// criar um pacote para erro
 	if p.className != p.fileName {
@@ -135,6 +134,8 @@ func (p *Parser) CompileClassVarDec() {
 }
 
 func (p *Parser) CompileSubroutine() {
+	p.st.StartSubroutine()
+
 	xmlwriter.PrintNonTerminal("subroutineDec", p.output == XML)
 
 	if p.peekTokenIs(token.CONSTRUCTOR) {
@@ -194,7 +195,7 @@ func (p *Parser) CompileSubroutineBody(functionName string, subroutineType token
 
 	switch subroutineType {
 	case token.CONSTRUCTOR:
-		p.vm.WritePush(vmwriter.CONST, nLocals)
+		p.vm.WritePush(vmwriter.CONST, p.st.VarCount(symboltable.FIELD))
 		p.vm.WriteCall("Memory.alloc", 1)
 		p.vm.WritePop(vmwriter.POINTER, 0)
 
@@ -389,6 +390,7 @@ func (p *Parser) CompileTerm() {
 
 		case token.LPAREN, token.DOT: //is subroutine
 			p.CompileSubroutineCall()
+			//os.Exit(0)
 
 		default: // is variable
 			sym := p.st.Resolve(identName)
@@ -424,31 +426,52 @@ func (p *Parser) CompileTerm() {
 
 func (p *Parser) CompileSubroutineCall() {
 	// ainda vou precisar saber o nome da funcao
-	if p.peekTokenIs(token.LPAREN) {
+	ident := p.curToken.Literal
+	numArgs := 0
+	if p.peekTokenIs(token.LPAREN) { // é um método
 		p.expectPeek(token.LPAREN)
 
-		p.CompileExpressionList()
-
+		numArgs = p.CompileExpressionList()
+		p.vm.WritePush(vmwriter.POINTER, 0)
 		p.expectPeek(token.RPAREN)
+
+		ident = p.className + "." + ident
+		numArgs++
+		p.vm.WriteCall(ident, numArgs)
 
 	} else {
 		p.expectPeek(token.DOT)
-		p.expectPeek(token.IDENT)
+		sym, has := p.st.Lookup(ident)
 
-		p.expectPeek(token.LPAREN)
+		if has { // method
+			p.vm.WritePush(scopeToSegment(sym.Scope), sym.Index)
+			p.expectPeek(token.IDENT)
+			ident = sym.Type + "." + p.curToken.Literal
+			p.expectPeek(token.LPAREN)
 
-		p.CompileExpressionList()
+			numArgs = p.CompileExpressionList()
+			numArgs++
+		} else { // static
+			p.expectPeek(token.IDENT)
+			ident = ident + "." + p.curToken.Literal
+			p.expectPeek(token.LPAREN)
+
+			numArgs = p.CompileExpressionList()
+		}
 
 		p.expectPeek(token.RPAREN)
-
+		p.vm.WriteCall(ident, numArgs)
 	}
 
 }
 
-func (p *Parser) CompileExpressionList() {
+func (p *Parser) CompileExpressionList() int {
 	xmlwriter.PrintNonTerminal("ExpressionList", p.output == XML)
+	numArgs := 0
+
 	if !p.peekTokenIs(token.RPAREN) {
 		p.CompileExpression()
+		numArgs++
 	}
 
 	for p.peekTokenIs(token.COMMA) {
@@ -456,10 +479,11 @@ func (p *Parser) CompileExpressionList() {
 		p.expectPeek(token.COMMA)
 
 		p.CompileExpression()
+		numArgs++
 	}
 
 	xmlwriter.PrintNonTerminal("/ExpressionList", p.output == XML)
-
+	return numArgs
 }
 
 func (p *Parser) CompileDo() {
@@ -474,27 +498,6 @@ func (p *Parser) CompileDo() {
 
 	xmlwriter.PrintNonTerminal("/doStatement", p.output == XML)
 }
-
-/*
-label WHILE_EXP0
-push local 0
-not
-if-goto WHILE_END0
-push constant 60
-pop local 0
-goto WHILE_EXP0
-label WHILE_END0
-push local 0
-
-
-if-goto IF_TRUE0
-goto IF_FALSE0
-label IF_TRUE0
-push constant 60
-pop local 0
-label IF_FALSE0
-push constant 10
-*/
 
 func (p *Parser) CompileWhile() {
 	xmlwriter.PrintNonTerminal("whileStatement", p.output == XML)
@@ -526,22 +529,41 @@ func (p *Parser) CompileWhile() {
 	xmlwriter.PrintNonTerminal("/whileStatement", p.output == XML)
 }
 
+/*
+push constant 60
+pop local 1
+goto IF_END0
+label IF_FALSE0
+push constant 10
+pop local 2
+label IF_END0
+*/
+
 func (p *Parser) CompileIf() {
 	xmlwriter.PrintNonTerminal("ifStatement", p.output == XML)
+
+	labelTrue := fmt.Sprintf("IF_TRUE%d", p.ifLabelNum)
+	labelFalse := fmt.Sprintf("IF_FALSE%d", p.ifLabelNum)
+	labelEnd := fmt.Sprintf("IF_END%d", p.ifLabelNum)
+	p.ifLabelNum++
+
 	p.expectPeek(token.IF)
-
 	p.expectPeek(token.LPAREN)
-
 	p.CompileExpression()
-
 	p.expectPeek(token.RPAREN)
+
+	p.vm.WriteIf(labelTrue)
+	p.vm.WriteGoto(labelFalse)
+	p.vm.WriteLabel(labelTrue)
 
 	p.expectPeek(token.LBRACE)
 
 	p.CompileStatements()
 
+	p.vm.WriteGoto(labelEnd)
 	p.expectPeek(token.RBRACE)
 
+	p.vm.WriteLabel(labelFalse)
 	if p.peekTokenIs(token.ELSE) {
 		p.expectPeek(token.ELSE)
 
@@ -552,6 +574,7 @@ func (p *Parser) CompileIf() {
 		p.expectPeek(token.RBRACE)
 
 	}
+	p.vm.WriteLabel(labelEnd)
 
 	xmlwriter.PrintNonTerminal("/ifStatement", p.output == XML)
 }

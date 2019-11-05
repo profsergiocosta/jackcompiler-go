@@ -38,7 +38,7 @@ func NewSymbolTable() *SymbolTable {
 	}
 	return &SymbolTable{classScope: s1, subRoutineScope: s2, numDefinitions: defs}
 }
-func (s *SymbolTable) lookup(name string) (Symbol, bool) {
+func (s *SymbolTable) Lookup(name string) (Symbol, bool) {
 	sym, hasSub := s.subRoutineScope[name]
 	if hasSub {
 		return sym, hasSub
@@ -68,7 +68,7 @@ func (s *SymbolTable) Define(name string, ttype string, scope SymbolScope) {
 }
 
 func (s *SymbolTable) Resolve(name string) Symbol {
-	sym, hasDefined := s.lookup(name)
+	sym, hasDefined := s.Lookup(name)
 
 	if !hasDefined {
 		fmt.Printf("identifier %s not defined \n", name)

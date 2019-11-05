@@ -2,16 +2,14 @@
 
 class Expression {
 
-    function int main () {
+method int funcao2 () {
+    return 0;
+}
+    method int main () {
          var int a;
-         var String s;
-        // let a[4] = a[8] * 10;
-         //let s = "ola";
-         while (a) {
-             let a = 60;
-         }
-
-          return 10;
+         var Ponto b;
+         let a = Math.funcao (10, 20);
+          return 1;
     }
 
 

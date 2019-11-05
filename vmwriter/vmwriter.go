@@ -23,7 +23,7 @@ type Segment string
 
 const (
 	STATIC  Segment = "static"
-	ARG     Segment = "arg"
+	ARG     Segment = "argument"
 	LOCAL   Segment = "local"
 	CONST   Segment = "constant"
 	THIS    Segment = "this"
