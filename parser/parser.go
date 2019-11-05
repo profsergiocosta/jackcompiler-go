@@ -10,10 +10,10 @@ import (
 
 	"github.com/profsergiocosta/jackcompiler-go/symboltable"
 	"github.com/profsergiocosta/jackcompiler-go/vmwriter"
+	"github.com/profsergiocosta/jackcompiler-go/xmlwriter"
 
 	"github.com/profsergiocosta/jackcompiler-go/lexer"
 	"github.com/profsergiocosta/jackcompiler-go/token"
-	xmlwriter "github.com/profsergiocosta/jackcompiler-go/xmlwrite"
 )
 
 const (
@@ -52,7 +52,7 @@ func New(pathName string) *Parser {
 
 	p.output = VM
 	p.st = symboltable.NewSymbolTable()
-	p.vm = vmwriter.New(FilenameWithoutExtension(pathName) + ".vm1")
+	p.vm = vmwriter.New(FilenameWithoutExtension(pathName) + ".vm")
 	p.nextToken()
 	p.whileLabelNum = 0
 	p.ifLabelNum = 0
@@ -433,9 +433,9 @@ func (p *Parser) CompileSubroutineCall() {
 	numArgs := 0
 	if p.peekTokenIs(token.LPAREN) { // é um método
 		p.expectPeek(token.LPAREN)
-
-		numArgs = p.CompileExpressionList()
 		p.vm.WritePush(vmwriter.POINTER, 0)
+		numArgs = p.CompileExpressionList()
+
 		p.expectPeek(token.RPAREN)
 
 		ident = p.className + "." + ident

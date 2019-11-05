@@ -4,7 +4,6 @@ package lexer
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/profsergiocosta/jackcompiler-go/token"
 )
@@ -162,43 +161,3 @@ func (l *Lexer) readString() string {
 	}
 	return l.input[position:l.position]
 }
-
-/*******************************
- nand2tetris api
-/*******************************/
-func (l *Lexer) advance() {
-	l.currToken = l.NextToken()
-}
-func (l *Lexer) hasMoreTokens() bool {
-	return l.currToken.Type != token.EOF
-}
-
-func (l *Lexer) tokenType() token.TokenType {
-	return l.currToken.Type
-}
-
-func (l *Lexer) keyword() token.TokenType {
-	return l.currToken.Type
-}
-
-func (l *Lexer) symbol() byte {
-	return l.currToken.Literal[0]
-}
-
-func (l *Lexer) identifier() string {
-	return l.currToken.Literal
-}
-
-func (l *Lexer) IntVal() int {
-	i1, err := strconv.Atoi(l.currToken.Literal)
-	if err == nil {
-		return i1
-	}
-	return -1
-}
-
-func (l *Lexer) stringVal() string {
-	return l.currToken.Literal
-}
-
-/***********************************************/
