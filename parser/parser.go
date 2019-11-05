@@ -135,6 +135,9 @@ func (p *Parser) CompileClassVarDec() {
 
 func (p *Parser) CompileSubroutine() {
 	p.st.StartSubroutine()
+	// deixar igual ao do projeto
+	p.ifLabelNum = 0
+	p.whileLabelNum = 0
 
 	xmlwriter.PrintNonTerminal("subroutineDec", p.output == XML)
 
@@ -529,16 +532,6 @@ func (p *Parser) CompileWhile() {
 	xmlwriter.PrintNonTerminal("/whileStatement", p.output == XML)
 }
 
-/*
-push constant 60
-pop local 1
-goto IF_END0
-label IF_FALSE0
-push constant 10
-pop local 2
-label IF_END0
-*/
-
 func (p *Parser) CompileIf() {
 	xmlwriter.PrintNonTerminal("ifStatement", p.output == XML)
 
@@ -560,8 +553,11 @@ func (p *Parser) CompileIf() {
 
 	p.CompileStatements()
 
-	p.vm.WriteGoto(labelEnd)
 	p.expectPeek(token.RBRACE)
+
+	if p.peekTokenIs(token.ELSE) {
+		p.vm.WriteGoto(labelEnd)
+	}
 
 	p.vm.WriteLabel(labelFalse)
 	if p.peekTokenIs(token.ELSE) {
@@ -572,9 +568,8 @@ func (p *Parser) CompileIf() {
 		p.CompileStatements()
 
 		p.expectPeek(token.RBRACE)
-
+		p.vm.WriteLabel(labelEnd)
 	}
-	p.vm.WriteLabel(labelEnd)
 
 	xmlwriter.PrintNonTerminal("/ifStatement", p.output == XML)
 }

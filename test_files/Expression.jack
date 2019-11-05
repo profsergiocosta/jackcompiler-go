@@ -2,14 +2,27 @@
 
 class Expression {
 
-method int funcao2 () {
-    return 0;
-}
-    method int main () {
+
+    method void main () {
          var int a;
-         var Ponto b;
-         let a = Math.funcao (10, 20);
-          return 1;
+
+        if (a = 10) {
+            let a = 1;
+        } else {
+            let a=2;
+        }
+        return;
+    }
+
+        method void main2 () {
+         var int a;
+
+        if (a = 10) {
+            let a = 1;
+        } else {
+            let a=2;
+        }
+        return;
     }
 
 
