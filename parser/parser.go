@@ -353,11 +353,13 @@ func (p *Parser) CompileKeywordConst(v token.TokenType) {
 }
 func (p *Parser) CompileTerm() {
 	xmlwriter.PrintNonTerminal("TERM", p.output == XML)
+
 	switch p.peekToken.Type {
 	case token.INTCONST:
 		p.nextToken()
 		p.vm.WritePush(vmwriter.CONST, p.curTokenAsInt())
 		xmlwriter.PrintTerminal(p.curToken, p.output == XML)
+
 	case token.TRUE, token.FALSE, token.NULL, token.THIS:
 		p.CompileKeywordConst(p.peekToken.Type)
 
@@ -428,7 +430,6 @@ func (p *Parser) CompileTerm() {
 }
 
 func (p *Parser) CompileSubroutineCall() {
-	// ainda vou precisar saber o nome da funcao
 	ident := p.curToken.Literal
 	numArgs := 0
 	if p.peekTokenIs(token.LPAREN) { // é um método

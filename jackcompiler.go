@@ -50,6 +50,8 @@ func main() {
 			fmt.Printf("Compiling: %s \n", abs)
 			p := parser.New(path)
 			p.Compile()
+			//p.CompileExpression()
+			//p.CompileIf()
 		}
 
 	}

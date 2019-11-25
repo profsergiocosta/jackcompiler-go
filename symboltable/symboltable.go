@@ -20,6 +20,7 @@ type Symbol struct {
 	Scope SymbolScope
 	Index int
 }
+
 type SymbolTable struct {
 	classScope      map[string]Symbol
 	subRoutineScope map[string]Symbol
