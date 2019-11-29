@@ -136,8 +136,8 @@ func (p *Parser) CompileClassVarDec() {
 func (p *Parser) CompileSubroutine() {
 	p.st.StartSubroutine()
 	// deixar igual ao do projeto
-	//p.ifLabelNum = 0
-	//p.whileLabelNum = 0
+	p.ifLabelNum = 0
+	p.whileLabelNum = 0
 
 	xmlwriter.PrintNonTerminal("subroutineDec", p.output == XML)
 
@@ -506,8 +506,8 @@ func (p *Parser) CompileDo() {
 func (p *Parser) CompileWhile() {
 	xmlwriter.PrintNonTerminal("whileStatement", p.output == XML)
 
-	labelWhileExp := fmt.Sprintf("%s_WHILE_EXP%d", p.className, p.whileLabelNum)
-	labelWhileEnd := fmt.Sprintf("%s_WHILE_END%d", p.className, p.whileLabelNum)
+	labelWhileExp := fmt.Sprintf("WHILE_EXP%d",  p.whileLabelNum)
+	labelWhileEnd := fmt.Sprintf("WHILE_END%d",  p.whileLabelNum)
 	p.whileLabelNum++
 
 	p.vm.WriteLabel(labelWhileExp)
@@ -536,9 +536,9 @@ func (p *Parser) CompileWhile() {
 func (p *Parser) CompileIf() {
 	xmlwriter.PrintNonTerminal("ifStatement", p.output == XML)
 
-	labelTrue := fmt.Sprintf("%s_IF_TRUE%d", p.className, p.ifLabelNum)
-	labelFalse := fmt.Sprintf("%s_IF_FALSE%d", p.className, p.ifLabelNum)
-	labelEnd := fmt.Sprintf("%s_IF_END%d", p.className, p.ifLabelNum)
+	labelTrue := fmt.Sprintf("IF_TRUE%d", p.ifLabelNum)
+	labelFalse := fmt.Sprintf("IF_FALSE%d",  p.ifLabelNum)
+	labelEnd := fmt.Sprintf("IF_END%d",  p.ifLabelNum)
 	p.ifLabelNum++
 
 	p.expectPeek(token.IF)
