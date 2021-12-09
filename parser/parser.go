@@ -353,6 +353,23 @@ func (p *Parser) CompileKeywordConst(v token.TokenType) {
 }
 func (p *Parser) CompileTerm() {
 	xmlwriter.PrintNonTerminal("TERM", p.output == XML)
+	p.CompileFactor();
+	for !p.peekTokenIs(token.EOF) &&  (p.peekTokenIs(token.SLASH) || p.peekTokenIs(token.ASTERISK) )   {
+		p.nextToken()
+		xmlwriter.PrintTerminal(p.curToken, p.output == XML)
+
+		op := p.curToken.Type
+
+		p.CompileFactor()
+
+		p.CompileOperators(op)
+	}
+
+	xmlwriter.PrintNonTerminal("/TERM", p.output == XML)
+}
+
+func (p *Parser) CompileFactor() {
+	xmlwriter.PrintNonTerminal("FACTOR", p.output == XML)
 
 	switch p.peekToken.Type {
 	case token.INTCONST:
@@ -426,7 +443,7 @@ func (p *Parser) CompileTerm() {
 		os.Exit(1)
 
 	}
-	xmlwriter.PrintNonTerminal("/TERM", p.output == XML)
+	xmlwriter.PrintNonTerminal("/FACTOR", p.output == XML)
 }
 
 func (p *Parser) CompileSubroutineCall() {

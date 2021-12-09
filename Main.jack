@@ -1,0 +1,10 @@
+class Main {
+
+
+    function void main () {
+        var int x;
+        let x = 2 + 5 * 8 + 6 * 3;
+        do Output.printInt(x);
+        return;
+    }
+}
