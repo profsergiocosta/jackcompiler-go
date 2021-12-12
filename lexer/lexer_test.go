@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/profsergiocosta/jackcompiler-go/token"
+	"jackcompiler-go/token"
 )
 
 func TestNextToken(t *testing.T) {

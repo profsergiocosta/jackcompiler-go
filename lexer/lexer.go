@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/profsergiocosta/jackcompiler-go/token"
+	"jackcompiler-go/token"
 )
 
 type Lexer struct {

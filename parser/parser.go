@@ -8,12 +8,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/profsergiocosta/jackcompiler-go/symboltable"
-	"github.com/profsergiocosta/jackcompiler-go/vmwriter"
-	"github.com/profsergiocosta/jackcompiler-go/xmlwriter"
+	"jackcompiler-go/symboltable"
+	"jackcompiler-go/vmwriter"
+	"jackcompiler-go/xmlwriter"
 
-	"github.com/profsergiocosta/jackcompiler-go/lexer"
-	"github.com/profsergiocosta/jackcompiler-go/token"
+	"jackcompiler-go/lexer"
+	"jackcompiler-go/token"
 )
 
 const (
@@ -353,8 +353,8 @@ func (p *Parser) CompileKeywordConst(v token.TokenType) {
 }
 func (p *Parser) CompileTerm() {
 	xmlwriter.PrintNonTerminal("TERM", p.output == XML)
-	p.CompileFactor();
-	for !p.peekTokenIs(token.EOF) &&  (p.peekTokenIs(token.SLASH) || p.peekTokenIs(token.ASTERISK) )   {
+	p.CompileFactor()
+	for !p.peekTokenIs(token.EOF) && (p.peekTokenIs(token.SLASH) || p.peekTokenIs(token.ASTERISK)) {
 		p.nextToken()
 		xmlwriter.PrintTerminal(p.curToken, p.output == XML)
 
@@ -523,8 +523,8 @@ func (p *Parser) CompileDo() {
 func (p *Parser) CompileWhile() {
 	xmlwriter.PrintNonTerminal("whileStatement", p.output == XML)
 
-	labelWhileExp := fmt.Sprintf("WHILE_EXP%d",  p.whileLabelNum)
-	labelWhileEnd := fmt.Sprintf("WHILE_END%d",  p.whileLabelNum)
+	labelWhileExp := fmt.Sprintf("WHILE_EXP%d", p.whileLabelNum)
+	labelWhileEnd := fmt.Sprintf("WHILE_END%d", p.whileLabelNum)
 	p.whileLabelNum++
 
 	p.vm.WriteLabel(labelWhileExp)
@@ -554,8 +554,8 @@ func (p *Parser) CompileIf() {
 	xmlwriter.PrintNonTerminal("ifStatement", p.output == XML)
 
 	labelTrue := fmt.Sprintf("IF_TRUE%d", p.ifLabelNum)
-	labelFalse := fmt.Sprintf("IF_FALSE%d",  p.ifLabelNum)
-	labelEnd := fmt.Sprintf("IF_END%d",  p.ifLabelNum)
+	labelFalse := fmt.Sprintf("IF_FALSE%d", p.ifLabelNum)
+	labelEnd := fmt.Sprintf("IF_END%d", p.ifLabelNum)
 	p.ifLabelNum++
 
 	p.expectPeek(token.IF)

@@ -1,4 +1,3 @@
 ## Run
 
-go run github.com/profsergiocosta/jackcompiler-go/ fileName.jack
-
+go run jackcompiler-go/ fileName.jack
