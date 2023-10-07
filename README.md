@@ -1,3 +1,8 @@
+# gopath
+
+
+export GOPATH=$HOME/dev/go
+
 ## Run
 
-go run jackcompiler-go/ fileName.jack
+go run . Main.jack 
